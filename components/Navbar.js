@@ -34,31 +34,31 @@ export default function Navbar() {
     }, [status]);
 
     return (
-        <nav className="navbar">
-            <div className="navbar-container">
+        <nav className="sticky top-0 z-50 bg-white/82 backdrop-blur-xl backdrop-saturate-[1.8] border-b border-border/70 transition-all duration-250">
+            <div className="max-w-[1280px] mx-auto px-6 h-[68px] flex items-center justify-between gap-8">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-800 hover:text-gray-600 transition-colors">
-                    <span className="flex items-center justify-center mr-10">
+                <Link href="/" className="flex items-center gap-2 text-xl font-bold text-text-main hover:scale-[1.04] transition-transform duration-500">
+                    <span className="flex items-center justify-center mr-2.5">
                         <img src="/logo.webp" alt="NoteNibo" width="50" height="50" />
                     </span>
                     <span>NoteNibo</span>
                 </Link>
 
                 {/* Desktop Nav */}
-                <div className="navbar-links">
-                    <Link href="/" className="nav-link">
+                <div className="hidden md:flex items-center gap-1">
+                    <Link href="/" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150 whitespace-nowrap">
                         Marketplace
                     </Link>
                     {status === "authenticated" && (
                         <>
-                            <Link href="/sell" className="nav-link">
+                            <Link href="/sell" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150 whitespace-nowrap">
                                 Sell Notes
                             </Link>
-                            <Link href="/dashboard" className="nav-link">
+                            <Link href="/dashboard" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150 whitespace-nowrap">
                                 Dashboard
                             </Link>
                             {session?.user?.role === "admin" && (
-                                <Link href="/admin" className="nav-link nav-link-admin">
+                                <Link href="/admin" className="px-4 py-2 rounded-[10px] text-sm font-medium text-accent-dark hover:text-primary hover:bg-pastel-purple transition-all duration-150 whitespace-nowrap">
                                     Admin
                                 </Link>
                             )}
@@ -67,45 +67,28 @@ export default function Navbar() {
                 </div>
 
                 {/* Auth Section */}
-                <div className="navbar-auth">
+                <div className="hidden md:flex items-center gap-3">
                     {status === "loading" ? (
-                        <div className="nav-skeleton" />
+                        <div className="w-[120px] h-8 rounded-[10px] bg-border-light animate-pulse-soft" />
                     ) : status === "authenticated" ? (
-                        <div className="nav-user">
+                        <div className="flex items-center gap-3">
                             <Link
                                 href="/add-balance"
-                                style={{
-                                    background: "var(--pastel-mint)",
-                                    padding: "0.5rem 1rem",
-                                    borderRadius: "999px",
-                                    fontSize: "0.875rem",
-                                    fontWeight: 600,
-                                    color: "var(--color-text)",
-                                    border: "1px solid var(--color-border)",
-                                    transition: "all 0.2s ease",
-                                    marginRight: "1rem",
-                                    textDecoration: "none",
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.target.style.background = "var(--pastel-blue)";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.target.style.background = "var(--pastel-mint)";
-                                }}
+                                className="bg-pastel-mint px-4 py-2 rounded-full text-sm font-semibold text-text-main border border-border hover:bg-pastel-blue transition-all duration-200 mr-4 no-underline"
                             >
-                                <Wallet size={16} style={{ display: "inline", verticalAlign: "middle" }} /> ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                                <Wallet size={16} className="inline align-middle" /> ৳{new Intl.NumberFormat("en-BD").format(balance)}
                             </Link>
-                            <span className="nav-user-name">{session.user.name}</span>
-                            <button onClick={() => signOut({ callbackUrl: "/" })} className="btn btn-outline btn-sm">
+                            <span className="text-sm font-medium text-text-secondary max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">{session.user.name}</span>
+                            <button onClick={() => signOut({ callbackUrl: "/" })} className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-transparent text-primary border-[1.5px] border-border hover:border-accent hover:text-accent-dark hover:bg-pastel-pink transition-all duration-150 cursor-pointer">
                                 Sign Out
                             </button>
                         </div>
                     ) : (
-                        <div className="nav-auth-buttons">
-                            <Link href="/login" className="btn btn-outline btn-sm">
+                        <div className="flex items-center gap-2">
+                            <Link href="/login" className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-transparent text-primary border-[1.5px] border-border hover:border-accent hover:text-accent-dark hover:bg-pastel-pink transition-all duration-150">
                                 Sign In
                             </Link>
-                            <Link href="/register" className="btn btn-primary btn-sm">
+                            <Link href="/register" className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-br from-accent to-primary text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
                                 Register
                             </Link>
                         </div>
@@ -113,48 +96,36 @@ export default function Navbar() {
                 </div>
 
                 {/* Mobile Toggle */}
-                <button className="navbar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
+                <button className="md:hidden bg-transparent border-none text-2xl cursor-pointer text-text-main p-1" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
                     {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
             </div>
 
             {/* Mobile Menu */}
             {mobileOpen && (
-                <div className="navbar-mobile-menu">
+                <div className="md:hidden flex flex-col gap-1 px-6 pb-4 pt-3 border-t border-border-light animate-slide-down bg-white/95">
                     {status === "authenticated" && (
                         <Link
                             href="/add-balance"
-                            style={{
-                                background: "var(--pastel-mint)",
-                                padding: "0.75rem 1rem",
-                                borderRadius: "12px",
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                color: "var(--color-text)",
-                                border: "1px solid var(--color-border)",
-                                marginBottom: "1rem",
-                                display: "block",
-                                textAlign: "center",
-                                textDecoration: "none",
-                            }}
+                            className="bg-pastel-mint px-4 py-3 rounded-xl text-sm font-semibold text-text-main border border-border mb-4 block text-center no-underline"
                             onClick={() => setMobileOpen(false)}
                         >
-                            <Wallet size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Balance: ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                            <Wallet size={16} className="inline align-middle" /> Balance: ৳{new Intl.NumberFormat("en-BD").format(balance)}
                         </Link>
                     )}
-                    <Link href="/" className="nav-link" onClick={() => setMobileOpen(false)}>
+                    <Link href="/" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150" onClick={() => setMobileOpen(false)}>
                         Marketplace
                     </Link>
                     {status === "authenticated" && (
                         <>
-                            <Link href="/sell" className="nav-link" onClick={() => setMobileOpen(false)}>
+                            <Link href="/sell" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150" onClick={() => setMobileOpen(false)}>
                                 Sell Notes
                             </Link>
-                            <Link href="/dashboard" className="nav-link" onClick={() => setMobileOpen(false)}>
+                            <Link href="/dashboard" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150" onClick={() => setMobileOpen(false)}>
                                 Dashboard
                             </Link>
                             {session?.user?.role === "admin" && (
-                                <Link href="/admin" className="nav-link nav-link-admin" onClick={() => setMobileOpen(false)}>
+                                <Link href="/admin" className="px-4 py-2 rounded-[10px] text-sm font-medium text-accent-dark hover:text-primary hover:bg-pastel-purple transition-all duration-150" onClick={() => setMobileOpen(false)}>
                                     Admin
                                 </Link>
                             )}
@@ -163,7 +134,7 @@ export default function Navbar() {
                                     setMobileOpen(false);
                                     signOut({ callbackUrl: "/" });
                                 }}
-                                className="btn btn-outline btn-sm"
+                                className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-transparent text-primary border-[1.5px] border-border hover:border-accent hover:text-accent-dark hover:bg-pastel-pink transition-all duration-150 cursor-pointer"
                             >
                                 Sign Out
                             </button>
@@ -171,10 +142,10 @@ export default function Navbar() {
                     )}
                     {status === "unauthenticated" && (
                         <>
-                            <Link href="/login" className="nav-link" onClick={() => setMobileOpen(false)}>
+                            <Link href="/login" className="px-4 py-2 rounded-[10px] text-sm font-medium text-text-secondary hover:text-primary hover:bg-pastel-purple transition-all duration-150" onClick={() => setMobileOpen(false)}>
                                 Sign In
                             </Link>
-                            <Link href="/register" className="btn btn-primary btn-sm" onClick={() => setMobileOpen(false)}>
+                            <Link href="/register" className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-br from-accent to-primary text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150" onClick={() => setMobileOpen(false)}>
                                 Register
                             </Link>
                         </>

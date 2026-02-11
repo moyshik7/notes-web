@@ -59,32 +59,32 @@ export default function RootLayout({ children }) {
           <Navbar />
           <main>{children}</main>
 
-          {/* Enhanced Footer */}
-          <footer className="footer">
-            <div className="footer-content">
-              <div className="footer-brand">
-                <h3>
-                  <img src="/logo.webp" alt="NoteNibo" width="18" height="18" style={{ display: "inline", verticalAlign: "middle", marginRight: "0.5rem" }} /> NoteNibo
+          {/* Footer */}
+          <footer className="border-t border-border mt-16 pt-12 pb-8 px-6 bg-gradient-to-t from-pastel-purple to-transparent">
+            <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] gap-8 mb-8">
+              <div className="font-display md:text-left text-center">
+                <h3 className="text-lg font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent mb-2 flex items-center gap-1.5 md:justify-start justify-center">
+                  <img src="/logo.webp" alt="NoteNibo" width="18" height="18" className="inline align-middle mr-2" /> NoteNibo
                 </h3>
-                <p>
+                <p className="text-[0.825rem] text-text-secondary leading-relaxed md:max-w-[300px]">
                   Bangladesh&apos;s first marketplace for handwritten lecture
                   notes. Helping students share knowledge and earn from their
                   hard work.
                 </p>
               </div>
-              <div className="footer-links">
-                <h4>Platform</h4>
-                <Link href="/">Marketplace</Link>
-                <Link href="/sell">Sell Notes</Link>
-                <Link href="/dashboard">Dashboard</Link>
+              <div className="md:text-left text-center">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-text-main mb-3">Platform</h4>
+                <Link href="/" className="block text-[0.825rem] text-text-secondary py-1 hover:text-accent-dark hover:translate-x-0.5 transition-all">Marketplace</Link>
+                <Link href="/sell" className="block text-[0.825rem] text-text-secondary py-1 hover:text-accent-dark hover:translate-x-0.5 transition-all">Sell Notes</Link>
+                <Link href="/dashboard" className="block text-[0.825rem] text-text-secondary py-1 hover:text-accent-dark hover:translate-x-0.5 transition-all">Dashboard</Link>
               </div>
-              <div className="footer-links">
-                <h4>Account</h4>
-                <Link href="/login">Sign In</Link>
-                <Link href="/register">Create Account</Link>
+              <div className="md:text-left text-center">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-text-main mb-3">Account</h4>
+                <Link href="/login" className="block text-[0.825rem] text-text-secondary py-1 hover:text-accent-dark hover:translate-x-0.5 transition-all">Sign In</Link>
+                <Link href="/register" className="block text-[0.825rem] text-text-secondary py-1 hover:text-accent-dark hover:translate-x-0.5 transition-all">Create Account</Link>
               </div>
             </div>
-            <div className="footer-bottom">
+            <div className="text-center pt-6 border-t border-border text-xs text-text-muted">
               <p>
                 © {new Date().getFullYear()} NoteNibo. Made for students, by
                 students.

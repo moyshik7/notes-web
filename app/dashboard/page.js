@@ -1,304 +1,229 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useCache } from "@/lib/useCache";
-import { Flower2, BookOpen, Sparkles, Star, CreditCard, Wallet, Download, BookOpenCheck, Printer, Upload } from "lucide-react";
+import { Download, ShoppingBag, DollarSign, FileText, Sparkles, ArrowRight, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState("purchases");
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push("/login");
-        }
-    }, [status, router]);
-
-    // Cache dashboard data (1 min TTL)
-    const { data, loading, refresh } = useCache(
-        "dashboard-data",
-        useCallback(async () => {
-            const res = await fetch("/api/user/dashboard");
-            if (!res.ok) throw new Error("Failed to load dashboard");
-            return res.json();
-        }, []),
-        60 * 1000,
-    );
-
-    async function handleDownload(noteId) {
-        try {
-            const res = await fetch(`/api/notes/${noteId}/download`);
-            const result = await res.json();
-            if (res.ok && result.downloadUrl) {
-                window.open(result.downloadUrl, "_blank");
-            } else {
-                alert(result.error || "Failed to get download link");
+        async function fetchData() {
+            try {
+                const res = await fetch("/api/user/dashboard");
+                const json = await res.json();
+                if (res.ok) setData(json);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
             }
-        } catch {
-            alert("Failed to download");
         }
-    }
+        if (status === "authenticated") fetchData();
+    }, [status]);
 
-    if (status === "loading") {
+    if (status === "unauthenticated") {
         return (
-            <div className="page-container">
-                <div className="page-header">
-                    <div className="skeleton" style={{ width: 200, height: 32, marginBottom: 8 }} />
-                    <div className="skeleton" style={{ width: 300, height: 18 }} />
-                </div>
-                <div className="stats-grid">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="skeleton skeleton-stat" />
-                    ))}
-                </div>
+            <div className="max-w-[1280px] mx-auto px-6 py-8 text-center animate-fade-in-up">
+                <div className="text-6xl mb-4">🔒</div>
+                <h2 className="font-display text-xl font-semibold text-text-secondary mb-2">Sign in Required</h2>
+                <p className="text-sm text-text-muted mb-4">Please sign in to view your dashboard.</p>
+                <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-gradient-to-br from-accent to-primary text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">Sign In</Link>
             </div>
         );
     }
 
-    if (loading && !data) {
+    if (loading || !data) {
         return (
-            <div className="page-container">
-                <div className="page-header">
-                    <div className="skeleton" style={{ width: 200, height: 32, marginBottom: 8 }} />
-                    <div className="skeleton" style={{ width: 300, height: 18 }} />
+            <div className="max-w-[1280px] mx-auto px-6 py-8 animate-fade-in">
+                <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-8 w-52 rounded-lg mb-8" />
+                <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-4 mb-8">
+                    {[...Array(3)].map((_, i) => <div key={i} className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-28 rounded-xl" />)}
                 </div>
-                <div className="stats-grid">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="skeleton skeleton-stat" />
-                    ))}
-                </div>
-                <div className="skeleton" style={{ width: "100%", height: 42, marginBottom: 24 }} />
-                <div className="skeleton" style={{ width: "100%", height: 200 }} />
+                <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-64 rounded-xl" />
             </div>
         );
     }
 
-    if (!data) {
-        return (
-            <div className="page-container">
-                <div className="empty-state">
-                    <div className="empty-state-icon"><Flower2 size={48} /></div>
-                    <h3 className="empty-state-title">Failed to load dashboard</h3>
-                    <p className="empty-state-text">Please try refreshing the page.</p>
-                    <button className="btn btn-primary mt-2" onClick={refresh}>
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
+    const user = data.user;
     const tabs = [
-        { id: "purchases", label: "My Purchases", icon: <BookOpen size={16} />, count: data.purchases?.length || 0 },
-        { id: "earnings", label: "My Earnings", icon: <Wallet size={16} />, count: data.uploadedNotes?.length || 0 },
-        { id: "submissions", label: "My Submissions", icon: <Sparkles size={16} />, count: data.submissions?.length || 0 },
-        { id: "printing", label: "Printing Service", icon: <Printer size={16} /> },
+        { key: "purchases", label: "My Purchases", icon: <ShoppingBag size={16} /> },
+        { key: "earnings", label: "My Earnings", icon: <DollarSign size={16} /> },
+        { key: "submissions", label: "My Submissions", icon: <FileText size={16} /> },
     ];
 
+    function getStatusBadge(statusVal) {
+        const map = {
+            approved: { bg: "bg-success-light", text: "text-success-dark", label: "Approved" },
+            pending: { bg: "bg-pastel-yellow", text: "text-warning", label: "Pending" },
+            rejected: { bg: "bg-danger/10", text: "text-danger", label: "Rejected" },
+        };
+        const s = map[statusVal] || map.pending;
+        return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}>{s.label}</span>;
+    }
+
     return (
-        <div className="page-container">
-            <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                    <h1 className="page-title">Dashboard</h1>
-                    <p className="page-subtitle">Welcome back, {data.user?.name}</p>
-                </div>
-                <Link href="/add-balance" className="btn btn-primary">
-                    <CreditCard size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Add Balance
-                </Link>
+        <div className="max-w-[1280px] mx-auto px-6 py-8">
+            <div className="mb-8 animate-fade-in-up">
+                <h1 className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent mb-2">Dashboard</h1>
+                <p className="text-base text-text-secondary">Welcome back, {user?.name || session?.user?.name}</p>
             </div>
 
-            {/* Stats Overview */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-label"><Wallet size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Wallet Balance</div>
-                    <div className="stat-value accent">৳{new Intl.NumberFormat("en-BD").format(data.user?.walletBalance || 0)}</div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-4 mb-8 animate-fade-in-up">
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Wallet Balance</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">৳{new Intl.NumberFormat("en-BD").format(user?.walletBalance || 0)}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label"><Sparkles size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Total Earnings</div>
-                    <div className="stat-value">৳{new Intl.NumberFormat("en-BD").format(data.totalEarnings || 0)}</div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Total Purchases</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">{data.purchases?.length || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label"><BookOpenCheck size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Notes Purchased</div>
-                    <div className="stat-value">{data.purchases?.length || 0}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label"><Star size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Notes Uploaded</div>
-                    <div className="stat-value">{data.uploadedNotes?.length || 0}</div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Total Earned</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">৳{new Intl.NumberFormat("en-BD").format(data.earnings?.reduce((sum, e) => sum + e.amount, 0) || 0)}</div>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="tabs">
+            <div className="flex gap-1 bg-surface border border-border rounded-xl w-fit p-1 mb-6 animate-fade-in">
                 {tabs.map((tab) => (
-                    <button key={tab.id} className={`tab ${activeTab === tab.id ? "active" : ""}`} onClick={() => setActiveTab(tab.id)}>
+                    <button key={tab.key} className={`flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-sm font-semibold cursor-pointer border-none transition-all duration-150 ${activeTab === tab.key ? "bg-gradient-to-br from-primary to-accent text-white shadow-sm" : "text-text-secondary hover:bg-pastel-purple hover:text-primary"}`} onClick={() => setActiveTab(tab.key)}>
                         {tab.icon} {tab.label}
-                        {tab.count !== undefined && tab.count > 0 && (
-                            <span
-                                style={{
-                                    marginLeft: 6,
-                                    fontSize: "0.7rem",
-                                    background: activeTab === tab.id ? "var(--color-accent-glow)" : "var(--color-border-light)",
-                                    padding: "1px 6px",
-                                    borderRadius: 999,
-                                    fontWeight: 700,
-                                }}
-                            >
-                                {tab.count}
-                            </span>
-                        )}
                     </button>
                 ))}
             </div>
 
-            {/* Tab Content */}
+            {/* Purchases Tab */}
             {activeTab === "purchases" && (
-                <div className="animate-fade">
+                <div className="animate-fade-in">
                     {data.purchases?.length > 0 ? (
-                        <div className="table-container">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Topics</th>
-                                        <th>Subject</th>
-                                        <th>Price</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.purchases.map((note) => (
-                                        <tr key={note._id}>
-                                            <td>
-                                                <strong>{note.title}</strong>
-                                            </td>
-                                            <td>{(note.topics || []).join(", ")}</td>
-                                            <td>{note.subject}</td>
-                                            <td>৳{note.price}</td>
-                                            <td>
-                                                <button className="btn btn-primary btn-sm" onClick={() => handleDownload(note._id)}>
-                                                    <Download size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Download
-                                                </button>
-                                            </td>
+                        <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-pastel-purple/50">
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Note</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Subject</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Price</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Date</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.purchases.map((purchase) => (
+                                            <tr key={purchase._id} className="border-t border-border hover:bg-surface-hover transition-colors">
+                                                <td className="px-5 py-3.5 text-sm font-medium text-text-main">
+                                                    <Link href={`/notes/${purchase.noteId?._id || purchase.noteId}`} className="text-accent-dark hover:underline">{purchase.noteId?.title || "Untitled"}</Link>
+                                                </td>
+                                                <td className="px-5 py-3.5 text-sm text-text-secondary">{purchase.noteId?.subject || "—"}</td>
+                                                <td className="px-5 py-3.5 text-sm font-semibold text-text-main">৳{purchase.amount}</td>
+                                                <td className="px-5 py-3.5 text-sm text-text-muted">{new Date(purchase.createdAt).toLocaleDateString()}</td>
+                                                <td className="px-5 py-3.5">
+                                                    {purchase.noteId?.fileUrl && (
+                                                        <a href={purchase.noteId.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-accent-dark">
+                                                            <Download size={14} /> Download
+                                                        </a>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     ) : (
-                        <div className="empty-state">
-                            <div className="empty-state-icon"><BookOpen size={48} /></div>
-                            <h3 className="empty-state-title">No purchases yet</h3>
-                            <p className="empty-state-text">Browse the marketplace to find notes for your courses.</p>
-                            <Link href="/" className="btn btn-primary mt-2">
-                                Browse Notes
-                            </Link>
+                        <div className="text-center py-16 animate-fade-in">
+                            <div className="text-6xl mb-4 animate-float"><ShoppingBag size={48} className="mx-auto text-text-muted" /></div>
+                            <h3 className="font-display text-xl font-semibold text-text-secondary mb-2">No purchases yet</h3>
+                            <p className="text-sm text-text-muted mb-4">Start exploring the marketplace to find quality notes.</p>
+                            <Link href="/" className="inline-flex items-center gap-1 text-sm font-semibold text-accent-dark hover:underline">Browse Notes <ArrowRight size={14} /></Link>
                         </div>
                     )}
                 </div>
             )}
 
+            {/* Earnings Tab */}
             {activeTab === "earnings" && (
-                <div className="animate-fade">
-                    {data.uploadedNotes?.length > 0 ? (
-                        <div className="table-container">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Price</th>
-                                        <th>Status</th>
-                                        <th>Sales</th>
-                                        <th>Earned (90%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.uploadedNotes.map((note) => (
-                                        <tr key={note._id}>
-                                            <td>
-                                                <strong>{note.title}</strong>
-                                            </td>
-                                            <td>৳{note.price}</td>
-                                            <td>
-                                                <span className={`badge badge-${note.status.toLowerCase()}`}>{note.status}</span>
-                                            </td>
-                                            <td>{note.purchaseCount}</td>
-                                            <td>৳{new Intl.NumberFormat("en-BD").format(Math.round(note.price * note.purchaseCount * 0.9))}</td>
+                <div className="animate-fade-in">
+                    {data.earnings?.length > 0 ? (
+                        <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-pastel-purple/50">
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Note</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Buyer</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Earned</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Date</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.earnings.map((earning) => (
+                                            <tr key={earning._id} className="border-t border-border hover:bg-surface-hover transition-colors">
+                                                <td className="px-5 py-3.5 text-sm font-medium text-text-main">{earning.noteId?.title || "Untitled"}</td>
+                                                <td className="px-5 py-3.5 text-sm text-text-secondary">{earning.buyerId?.name || "Anonymous"}</td>
+                                                <td className="px-5 py-3.5 text-sm font-semibold text-success-dark">৳{earning.amount}</td>
+                                                <td className="px-5 py-3.5 text-sm text-text-muted">{new Date(earning.createdAt).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     ) : (
-                        <div className="empty-state">
-                            <div className="empty-state-icon"><Sparkles size={48} /></div>
-                            <h3 className="empty-state-title">No uploaded notes yet</h3>
-                            <p className="empty-state-text">Start earning by uploading your handwritten notes.</p>
-                            <Link href="/sell" className="btn btn-primary mt-2">
-                                Upload Notes
-                            </Link>
+                        <div className="text-center py-16 animate-fade-in">
+                            <div className="text-6xl mb-4 animate-float"><Sparkles size={48} className="mx-auto text-text-muted" /></div>
+                            <h3 className="font-display text-xl font-semibold text-text-secondary mb-2">No earnings yet</h3>
+                            <p className="text-sm text-text-muted mb-4">Start selling notes to earn money!</p>
+                            <Link href="/sell" className="inline-flex items-center gap-1 text-sm font-semibold text-accent-dark hover:underline">Sell Notes <ArrowRight size={14} /></Link>
                         </div>
                     )}
                 </div>
             )}
 
+            {/* Submissions Tab */}
             {activeTab === "submissions" && (
-                <div className="animate-fade">
+                <div className="animate-fade-in">
                     {data.submissions?.length > 0 ? (
-                        <div className="table-container">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Topics</th>
-                                        <th>Subject</th>
-                                        <th>Status</th>
-                                        <th>Submitted</th>
-                                        <th>Feedback</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.submissions.map((sub) => (
-                                        <tr key={sub._id}>
-                                            <td>
-                                                <strong>{sub.noteId?.title || "—"}</strong>
-                                            </td>
-                                            <td>{(sub.noteId?.topics || []).join(", ") || "—"}</td>
-                                            <td>{sub.noteId?.subject || "—"}</td>
-                                            <td>
-                                                <span className={`badge badge-${sub.status.toLowerCase()}`}>{sub.status}</span>
-                                            </td>
-                                            <td>{new Date(sub.submittedAt).toLocaleDateString("en-BD")}</td>
-                                            <td>{sub.adminFeedback || "—"}</td>
+                        <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-pastel-purple/50">
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Title</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Subject</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Price</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Status</th>
+                                            <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Sales</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {data.submissions.map((note) => (
+                                            <tr key={note._id} className="border-t border-border hover:bg-surface-hover transition-colors">
+                                                <td className="px-5 py-3.5 text-sm font-medium text-text-main">{note.title}</td>
+                                                <td className="px-5 py-3.5 text-sm text-text-secondary">{note.subject}</td>
+                                                <td className="px-5 py-3.5 text-sm font-semibold text-text-main">৳{note.price}</td>
+                                                <td className="px-5 py-3.5">{getStatusBadge(note.status)}</td>
+                                                <td className="px-5 py-3.5 text-sm text-text-muted">{note.purchaseCount || 0}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     ) : (
-                        <div className="empty-state">
-                            <div className="empty-state-icon"><Star size={48} /></div>
-                            <h3 className="empty-state-title">No submissions yet</h3>
-                            <p className="empty-state-text">Submit your notes for review and track their status here.</p>
-                            <Link href="/sell" className="btn btn-primary mt-2">
-                                Upload Notes
-                            </Link>
+                        <div className="text-center py-16 animate-fade-in">
+                            <div className="text-6xl mb-4 animate-float"><FileText size={48} className="mx-auto text-text-muted" /></div>
+                            <h3 className="font-display text-xl font-semibold text-text-secondary mb-2">No submissions yet</h3>
+                            <p className="text-sm text-text-muted mb-4">Upload your first note and start earning!</p>
+                            <Link href="/sell" className="inline-flex items-center gap-1 text-sm font-semibold text-accent-dark hover:underline">Upload Note <ArrowRight size={14} /></Link>
                         </div>
                     )}
-                </div>
-            )}
-
-            {activeTab === "printing" && (
-                <div className="empty-state animate-fade">
-                    <div className="empty-state-icon"><Printer size={48} /></div>
-                    <h3 className="empty-state-title">On-Demand Printing</h3>
-                    <p className="empty-state-text">We&apos;re working on a service to print and deliver your purchased notes right to your doorstep. Stay tuned!</p>
-                    <div className="badge badge-pending mt-2" style={{ fontSize: "0.85rem", padding: "0.5rem 1rem" }}>
-                        Coming Soon
-                    </div>
                 </div>
             )}
         </div>

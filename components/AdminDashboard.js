@@ -15,9 +15,7 @@ export default function AdminDashboard({ initialData }) {
         try {
             const res = await fetch("/api/admin/stats");
             const result = await res.json();
-            if (res.ok) {
-                setData(result);
-            }
+            if (res.ok) setData(result);
         } catch (error) {
             console.error("Failed to load admin stats:", error);
         }
@@ -43,404 +41,238 @@ export default function AdminDashboard({ initialData }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: action, feedback, preview, images }),
             });
-
-            if (res.ok) {
-                // Refresh data
-                await fetchStats();
-                closeReviewModal();
-            } else {
-                const err = await res.json();
-                alert(err.error || "Action failed");
-            }
-        } catch {
-            alert("Failed to update note");
-        } finally {
-            setActionLoading(null);
-        }
+            if (res.ok) { await fetchStats(); closeReviewModal(); }
+            else { const err = await res.json(); alert(err.error || "Action failed"); }
+        } catch { alert("Failed to update note"); }
+        finally { setActionLoading(null); }
     }
 
     async function handleBalanceAction(requestId, action) {
         setBalanceActionLoading(requestId);
         try {
             const adminNote = action === "Rejected" ? prompt("Rejection reason (optional):") : "";
-            
             const res = await fetch(`/api/admin/balance-requests/${requestId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: action, adminNote: adminNote || "" }),
             });
-
-            if (res.ok) {
-                // Refresh data
-                await fetchStats();
-            } else {
-                const err = await res.json();
-                alert(err.error || "Action failed");
-            }
-        } catch {
-            alert("Failed to update balance request");
-        } finally {
-            setBalanceActionLoading(null);
-        }
+            if (res.ok) await fetchStats();
+            else { const err = await res.json(); alert(err.error || "Action failed"); }
+        } catch { alert("Failed to update balance request"); }
+        finally { setBalanceActionLoading(null); }
     }
 
     function submitReview() {
         if (!reviewModal) return;
-        
         const { note, action } = reviewModal;
         const feedback = action === "Rejected" ? prompt("Rejection reason (optional):") : "";
-        
-        // Parse image URLs from textarea (one per line)
-        const parsedImages = imageUrls
-            .split("\n")
-            .map(url => url.trim())
-            .filter(url => url.length > 0);
-
+        const parsedImages = imageUrls.split("\n").map(url => url.trim()).filter(url => url.length > 0);
         handleAction(note._id, action, feedback || "", previewUrl.trim(), parsedImages);
     }
 
     return (
-        <div className="page-container">
-            <div className="page-header">
-                <h1 className="page-title">Admin Dashboard</h1>
-                <p className="page-subtitle">Platform overview and note approvals</p>
+        <div className="max-w-[1280px] mx-auto px-6 py-8">
+            <div className="mb-8 animate-fade-in-up">
+                <h1 className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent mb-2">Admin Dashboard</h1>
+                <p className="text-base text-text-secondary">Platform overview and note approvals</p>
             </div>
 
             {/* Stats Grid */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-label">Total Revenue</div>
-                    <div className="stat-value accent">৳{new Intl.NumberFormat("en-BD").format(data.stats?.totalRevenue || 0)}</div>
+            <div className="grid grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4 mb-8 animate-fade-in-up">
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Total Revenue</div>
+                    <div className="font-display text-2xl font-extrabold text-accent-dark animate-count-up">৳{new Intl.NumberFormat("en-BD").format(data.stats?.totalRevenue || 0)}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Platform Revenue (10%)</div>
-                    <div className="stat-value">৳{new Intl.NumberFormat("en-BD").format(data.stats?.platformRevenue || 0)}</div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Platform Revenue (10%)</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">৳{new Intl.NumberFormat("en-BD").format(data.stats?.platformRevenue || 0)}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Total Notes</div>
-                    <div className="stat-value">{data.stats?.totalNotes || 0}</div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Total Notes</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">{data.stats?.totalNotes || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Pending Note Approvals</div>
-                    <div className="stat-value" style={{ color: "var(--color-warning)" }}>
-                        {data.stats?.pendingCount || 0}
-                    </div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Total Transactions</div>
+                    <div className="font-display text-2xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent animate-count-up">{data.stats?.totalTransactions || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Pending Balance Requests</div>
-                    <div className="stat-value" style={{ color: "var(--color-warning)" }}>
-                        {data.stats?.pendingBalanceCount || 0}
-                    </div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Pending Note Approvals</div>
+                    <div className="font-display text-2xl font-extrabold text-warning animate-count-up">{data.stats?.pendingCount || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Approved</div>
-                    <div className="stat-value" style={{ color: "var(--color-approved)" }}>
-                        {data.stats?.approvedCount || 0}
-                    </div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Pending Balance Requests</div>
+                    <div className="font-display text-2xl font-extrabold text-warning animate-count-up">{data.stats?.pendingBalanceCount || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Rejected</div>
-                    <div className="stat-value" style={{ color: "var(--color-rejected)" }}>
-                        {data.stats?.rejectedCount || 0}
-                    </div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Approved</div>
+                    <div className="font-display text-2xl font-extrabold text-success animate-count-up">{data.stats?.approvedCount || 0}</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-label">Total Transactions</div>
-                    <div className="stat-value">{data.stats?.totalTransactions || 0}</div>
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-card text-center hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">Rejected</div>
+                    <div className="font-display text-2xl font-extrabold text-danger animate-count-up">{data.stats?.rejectedCount || 0}</div>
                 </div>
             </div>
 
             {/* Pending Notes */}
-            <div className="page-header" style={{ marginTop: "1rem" }}>
-                <h2 className="page-title" style={{ fontSize: "1.5rem" }}>
-                    Pending Approvals
-                </h2>
+            <div className="mt-4 mb-6">
+                <h2 className="font-display text-2xl font-bold text-text-main">Pending Approvals</h2>
             </div>
 
             {data.pendingNotes?.length > 0 ? (
-                <div className="table-container">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Topics</th>
-                                <th>Subject</th>
-                                <th>Price</th>
-                                <th>Uploader</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.pendingNotes.map((note) => (
-                                <tr key={note._id}>
-                                    <td>
-                                        <strong>{note.title}</strong>
-                                        <br />
-                                        <span
-                                            style={{
-                                                fontSize: "0.75rem",
-                                                color: "var(--color-text-muted)",
-                                            }}
-                                        >
-                                            {note.description?.substring(0, 80)}...
-                                        </span>
-                                    </td>
-                                    <td>{(note.topics || []).join(", ")}</td>
-                                    <td>{note.subject}</td>
-                                    <td>৳{note.price}</td>
-                                    <td>
-                                        {note.uploader?.name}
-                                        <br />
-                                        <span
-                                            style={{
-                                                fontSize: "0.7rem",
-                                                color: "var(--color-text-muted)",
-                                            }}
-                                        >
-                                            {note.uploader?.email}
-                                        </span>
-                                    </td>
-                                    <td>{new Date(note.createdAt).toLocaleDateString("en-BD")}</td>
-                                    <td>
-                                        <div className="flex gap-1">
-                                            <button 
-                                                className="btn btn-success btn-sm" 
-                                                onClick={() => openReviewModal(note, "Approved")} 
-                                                disabled={actionLoading === note._id}
-                                            >
-                                                <Check size={14} /> Approve
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => openReviewModal(note, "Rejected")}
-                                                disabled={actionLoading === note._id}
-                                            >
-                                                <X size={14} /> Reject
-                                            </button>
-                                        </div>
-                                    </td>
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card mb-8">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-pastel-purple/50">
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Title</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Topics</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Subject</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Price</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Uploader</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Submitted</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {data.pendingNotes.map((note) => (
+                                    <tr key={note._id} className="border-t border-border hover:bg-surface-hover transition-colors">
+                                        <td className="px-5 py-3.5">
+                                            <strong className="text-sm text-text-main">{note.title}</strong>
+                                            <br />
+                                            <span className="text-xs text-text-muted">{note.description?.substring(0, 80)}...</span>
+                                        </td>
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">{(note.topics || []).join(", ")}</td>
+                                        <td className="px-5 py-3.5 text-sm text-text-secondary">{note.subject}</td>
+                                        <td className="px-5 py-3.5 text-sm font-semibold text-text-main">৳{note.price}</td>
+                                        <td className="px-5 py-3.5">
+                                            <span className="text-sm text-text-main">{note.uploader?.name}</span>
+                                            <br />
+                                            <span className="text-[0.7rem] text-text-muted">{note.uploader?.email}</span>
+                                        </td>
+                                        <td className="px-5 py-3.5 text-sm text-text-muted">{new Date(note.createdAt).toLocaleDateString("en-BD")}</td>
+                                        <td className="px-5 py-3.5">
+                                            <div className="flex gap-1">
+                                                <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-success text-white hover:opacity-90 transition-opacity cursor-pointer border-none disabled:opacity-50" onClick={() => openReviewModal(note, "Approved")} disabled={actionLoading === note._id}>
+                                                    <Check size={14} /> Approve
+                                                </button>
+                                                <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-danger text-white hover:opacity-90 transition-opacity cursor-pointer border-none disabled:opacity-50" onClick={() => openReviewModal(note, "Rejected")} disabled={actionLoading === note._id}>
+                                                    <X size={14} /> Reject
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : (
-                <div className="empty-state">
-                    <div className="empty-state-icon"><CheckCircle size={48} /></div>
-                    <h3 className="empty-state-title">All caught up!</h3>
-                    <p className="empty-state-text">No notes pending approval.</p>
+                <div className="text-center py-16 animate-fade-in mb-8">
+                    <div className="text-6xl mb-4"><CheckCircle size={48} className="mx-auto text-success" /></div>
+                    <h3 className="font-display text-xl font-semibold text-text-secondary mb-2">All caught up!</h3>
+                    <p className="text-sm text-text-muted">No notes pending approval.</p>
                 </div>
             )}
 
             {/* Pending Balance Requests */}
-            <div className="page-header" style={{ marginTop: "2rem" }}>
-                <h2 className="page-title" style={{ fontSize: "1.5rem" }}>
-                    <CreditCard size={20} style={{ display: "inline", verticalAlign: "middle" }} /> Pending Balance Requests
+            <div className="mt-8 mb-6">
+                <h2 className="font-display text-2xl font-bold text-text-main">
+                    <CreditCard size={20} className="inline align-middle" /> Pending Balance Requests
                 </h2>
             </div>
 
             {data.pendingBalanceRequests?.length > 0 ? (
-                <div className="table-container">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Method</th>
-                                <th>Amount</th>
-                                <th>Transaction ID</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.pendingBalanceRequests.map((req) => (
-                                <tr key={req._id}>
-                                    <td>
-                                        <strong>{req.user?.name || "Unknown"}</strong>
-                                        <br />
-                                        <span
-                                            style={{
-                                                fontSize: "0.7rem",
-                                                color: "var(--color-text-muted)",
-                                            }}
-                                        >
-                                            {req.user?.email || "N/A"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: "0.25rem",
-                                                padding: "0.25rem 0.5rem",
-                                                borderRadius: "var(--radius-sm)",
-                                                fontWeight: 600,
-                                                fontSize: "0.8rem",
-                                                textTransform: "capitalize",
-                                                background: req.method === "bkash" ? "#FDF0F5" : "#FFF7ED",
-                                                color: req.method === "bkash" ? "#E2136E" : "#F6921E",
-                                            }}
-                                        >
-                                            {req.method === "bkash" ? <Circle size={12} fill="#E2136E" stroke="#E2136E" /> : <Circle size={12} fill="#F6921E" stroke="#F6921E" />} {req.method}
-                                        </span>
-                                    </td>
-                                    <td style={{ fontWeight: 600 }}>
-                                        ৳{new Intl.NumberFormat("en-BD").format(req.amount)}
-                                    </td>
-                                    <td>
-                                        <code
-                                            style={{
-                                                background: "var(--pastel-purple)",
-                                                padding: "0.25rem 0.5rem",
-                                                borderRadius: "var(--radius-sm)",
-                                                fontSize: "0.85rem",
-                                            }}
-                                        >
-                                            {req.transactionId}
-                                        </code>
-                                    </td>
-                                    <td>{new Date(req.createdAt).toLocaleDateString("en-BD")}</td>
-                                    <td>
-                                        <div className="flex gap-1">
-                                            <button
-                                                className="btn btn-success btn-sm"
-                                                onClick={() => handleBalanceAction(req._id, "Approved")}
-                                                disabled={balanceActionLoading === req._id}
-                                            >
-                                                {balanceActionLoading === req._id ? "..." : <><Check size={14} /> Approve</>}
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => handleBalanceAction(req._id, "Rejected")}
-                                                disabled={balanceActionLoading === req._id}
-                                            >
-                                                {balanceActionLoading === req._id ? "..." : <><X size={14} /> Reject</>}
-                                            </button>
-                                        </div>
-                                    </td>
+                <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-card">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-pastel-purple/50">
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">User</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Method</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Amount</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Transaction ID</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Submitted</th>
+                                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-text-muted whitespace-nowrap">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {data.pendingBalanceRequests.map((req) => (
+                                    <tr key={req._id} className="border-t border-border hover:bg-surface-hover transition-colors">
+                                        <td className="px-5 py-3.5">
+                                            <strong className="text-sm text-text-main">{req.user?.name || "Unknown"}</strong>
+                                            <br />
+                                            <span className="text-[0.7rem] text-text-muted">{req.user?.email || "N/A"}</span>
+                                        </td>
+                                        <td className="px-5 py-3.5">
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold capitalize ${req.method === "bkash" ? "bg-[#FDF0F5] text-[#E2136E]" : "bg-[#FFF7ED] text-[#F6921E]"}`}>
+                                                <Circle size={12} fill={req.method === "bkash" ? "#E2136E" : "#F6921E"} stroke={req.method === "bkash" ? "#E2136E" : "#F6921E"} /> {req.method}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-3.5 text-sm font-semibold text-text-main">৳{new Intl.NumberFormat("en-BD").format(req.amount)}</td>
+                                        <td className="px-5 py-3.5">
+                                            <code className="bg-pastel-purple px-2 py-0.5 rounded-lg text-[0.85rem]">{req.transactionId}</code>
+                                        </td>
+                                        <td className="px-5 py-3.5 text-sm text-text-muted">{new Date(req.createdAt).toLocaleDateString("en-BD")}</td>
+                                        <td className="px-5 py-3.5">
+                                            <div className="flex gap-1">
+                                                <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-success text-white hover:opacity-90 transition-opacity cursor-pointer border-none disabled:opacity-50" onClick={() => handleBalanceAction(req._id, "Approved")} disabled={balanceActionLoading === req._id}>
+                                                    {balanceActionLoading === req._id ? "..." : <><Check size={14} /> Approve</>}
+                                                </button>
+                                                <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-danger text-white hover:opacity-90 transition-opacity cursor-pointer border-none disabled:opacity-50" onClick={() => handleBalanceAction(req._id, "Rejected")} disabled={balanceActionLoading === req._id}>
+                                                    {balanceActionLoading === req._id ? "..." : <><X size={14} /> Reject</>}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : (
-                <div className="empty-state">
-                    <div className="empty-state-icon"><CreditCard size={48} /></div>
-                    <h3 className="empty-state-title">No pending requests</h3>
-                    <p className="empty-state-text">All balance requests have been processed.</p>
+                <div className="text-center py-16 animate-fade-in">
+                    <div className="text-6xl mb-4"><CreditCard size={48} className="mx-auto text-text-muted" /></div>
+                    <h3 className="font-display text-xl font-semibold text-text-secondary mb-2">No pending requests</h3>
+                    <p className="text-sm text-text-muted">All balance requests have been processed.</p>
                 </div>
             )}
 
             {/* Review Modal */}
             {reviewModal && (
-                <div 
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: "rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                        padding: "1rem",
-                    }}
-                    onClick={closeReviewModal}
-                >
-                    <div 
-                        style={{
-                            background: "var(--color-surface)",
-                            borderRadius: "16px",
-                            padding: "2rem",
-                            maxWidth: "600px",
-                            width: "100%",
-                            maxHeight: "90vh",
-                            overflow: "auto",
-                            boxShadow: "var(--shadow-xl)",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem" }}>
-                            {reviewModal.action === "Approved" ? <><Check size={20} /> Approve Note</> : <><X size={20} /> Reject Note</>}
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" onClick={closeReviewModal}>
+                    <div className="bg-surface rounded-2xl p-8 max-w-[600px] w-full max-h-[90vh] overflow-auto shadow-xl animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="font-display text-2xl font-bold text-text-main mb-4">
+                            {reviewModal.action === "Approved" ? <><Check size={20} className="inline align-middle" /> Approve Note</> : <><X size={20} className="inline align-middle" /> Reject Note</>}
                         </h2>
-                        
-                        <div style={{ 
-                            background: "var(--pastel-purple)", 
-                            padding: "1rem", 
-                            borderRadius: "12px", 
-                            marginBottom: "1.5rem" 
-                        }}>
-                            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>
-                                {reviewModal.note.title}
-                            </h3>
-                            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-                                {reviewModal.note.description?.substring(0, 150)}...
-                            </p>
+
+                        <div className="bg-pastel-purple rounded-xl p-4 mb-6">
+                            <h3 className="text-lg font-semibold text-text-main mb-1">{reviewModal.note.title}</h3>
+                            <p className="text-sm text-text-secondary">{reviewModal.note.description?.substring(0, 150)}...</p>
                         </div>
 
                         {reviewModal.action === "Approved" && (
                             <>
-                                <div style={{ marginBottom: "1.25rem" }}>
-                                    <label style={{ 
-                                        display: "block", 
-                                        marginBottom: "0.5rem",
-                                        fontWeight: 600,
-                                        fontSize: "0.875rem",
-                                    }}>
-                                        Preview Image URL
-                                        <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}>
-                                            {" "}(for cover, OG, Twitter card)
-                                        </span>
+                                <div className="mb-5">
+                                    <label className="block text-sm font-semibold text-text-main mb-1.5">
+                                        Preview Image URL <span className="text-text-muted font-normal">(for cover, OG, Twitter card)</span>
                                     </label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        placeholder="https://example.com/preview.jpg"
-                                        value={previewUrl}
-                                        onChange={(e) => setPreviewUrl(e.target.value)}
-                                    />
+                                    <input type="text" className="w-full px-4 py-2.5 border-2 border-border rounded-[10px] text-sm font-sans text-text-main bg-surface outline-none focus:border-accent focus:shadow-[0_0_0_4px_var(--color-accent-glow)] focus:bg-white transition-all duration-150" placeholder="https://example.com/preview.jpg" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} />
                                 </div>
 
-                                <div style={{ marginBottom: "1.5rem" }}>
-                                    <label style={{ 
-                                        display: "block", 
-                                        marginBottom: "0.5rem",
-                                        fontWeight: 600,
-                                        fontSize: "0.875rem",
-                                    }}>
-                                        Additional Images
-                                        <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}>
-                                            {" "}(one URL per line)
-                                        </span>
+                                <div className="mb-6">
+                                    <label className="block text-sm font-semibold text-text-main mb-1.5">
+                                        Additional Images <span className="text-text-muted font-normal">(one URL per line)</span>
                                     </label>
-                                    <textarea
-                                        className="form-textarea"
-                                        placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
-                                        value={imageUrls}
-                                        onChange={(e) => setImageUrls(e.target.value)}
-                                        rows={4}
-                                    />
+                                    <textarea className="w-full px-4 py-2.5 border-2 border-border rounded-[10px] text-sm font-sans text-text-main bg-surface outline-none resize-y min-h-[100px] focus:border-accent focus:shadow-[0_0_0_4px_var(--color-accent-glow)] focus:bg-white transition-all duration-150" placeholder={"https://example.com/image1.jpg\nhttps://example.com/image2.jpg"} value={imageUrls} onChange={(e) => setImageUrls(e.target.value)} rows={4} />
                                 </div>
                             </>
                         )}
 
-                        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-                            <button 
-                                className="btn btn-secondary"
-                                onClick={closeReviewModal}
-                                disabled={actionLoading}
-                            >
+                        <div className="flex gap-3 justify-end">
+                            <button className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-transparent text-text-secondary border-2 border-border hover:bg-pastel-purple transition-all duration-150 cursor-pointer disabled:opacity-50" onClick={closeReviewModal} disabled={actionLoading}>
                                 Cancel
                             </button>
-                            <button 
-                                className={`btn ${reviewModal.action === "Approved" ? "btn-success" : "btn-danger"}`}
-                                onClick={submitReview}
-                                disabled={actionLoading}
-                            >
+                            <button className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white border-none cursor-pointer transition-all duration-150 disabled:opacity-50 ${reviewModal.action === "Approved" ? "bg-success hover:opacity-90" : "bg-danger hover:opacity-90"}`} onClick={submitReview} disabled={actionLoading}>
                                 {actionLoading ? "Processing..." : (reviewModal.action === "Approved" ? "Approve" : "Reject")}
                             </button>
                         </div>

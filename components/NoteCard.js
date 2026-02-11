@@ -5,61 +5,43 @@ export default function NoteCard({ note }) {
     const formattedPrice = new Intl.NumberFormat("en-BD").format(note.price);
 
     return (
-        <Link href={`/notes/${note._id}`} className="note-card">
+        <Link href={`/notes/${note._id}`} className="group flex flex-col bg-surface border border-border rounded-2xl overflow-hidden cursor-pointer no-underline relative animate-fade-in-up shadow-card hover:shadow-lg hover:-translate-y-1.5 transition-all duration-500">
             {note.preview ? (
-                <div style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "180px",
-                    overflow: "hidden",
-                    borderRadius: "12px 12px 0 0",
-                    backgroundColor: "#f0f0f0",
-                }}>
-                    <img 
+                <div className="relative w-full h-[180px] overflow-hidden rounded-t-xl bg-gray-100">
+                    <img
                         src={note.preview}
                         alt={note.title}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                        }}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                             e.target.style.display = "none";
                             e.target.parentElement.style.display = "none";
                         }}
                     />
-                    <div 
-                        className="note-card-badge" 
-                        style={{
-                            position: "absolute",
-                            top: "0.75rem",
-                            right: "0.75rem",
-                        }}
-                    >
+                    <div className="absolute top-3 right-3 text-[0.7rem] font-semibold uppercase tracking-wide px-3 py-1 rounded-full bg-pastel-lavender text-primary">
                         {note.subject}
                     </div>
                 </div>
             ) : (
-                <div className="note-card-header">
-                    <div className="note-card-badge">{note.subject}</div>
+                <div className="px-5 pt-5 flex items-start justify-between">
+                    <div className="text-[0.7rem] font-semibold uppercase tracking-wide px-3 py-1 rounded-full bg-pastel-lavender text-primary">{note.subject}</div>
                 </div>
             )}
 
-            <div className="note-card-body">
-                <h3 className="note-card-title">{note.title}</h3>
-                <p className="note-card-topics">
+            <div className="px-5 pb-5 pt-4 flex-1 flex flex-col">
+                <h3 className="font-display text-[1.05rem] font-semibold text-text-main mb-2 leading-snug line-clamp-2">{note.title}</h3>
+                <p className="flex flex-wrap gap-1.5 mb-auto pb-3">
                     {(note.topics || []).map((topic, i) => (
-                        <span key={i} className="note-card-topic-tag">
+                        <span key={i} className="inline-block text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full bg-pastel-blue text-primary whitespace-nowrap group-hover:bg-pastel-pink group-hover:text-accent-dark transition-all duration-150">
                             {topic}
                         </span>
                     ))}
                 </p>
 
-                <div className="note-card-footer">
-                    <div className="note-card-price">৳{formattedPrice}</div>
-                    <div className="note-card-meta">
-                        <span className="note-card-uploader">{note.uploader?.name || "Anonymous"}</span>
-                        {note.purchaseCount > 0 && <span className="note-card-purchases">{note.purchaseCount} sold</span>}
+                <div className="flex items-end justify-between pt-3 border-t border-dashed border-border">
+                    <div className="font-display text-xl font-bold text-accent-dark">৳{formattedPrice}</div>
+                    <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-xs text-text-secondary">{note.uploader?.name || "Anonymous"}</span>
+                        {note.purchaseCount > 0 && <span className="text-[0.7rem] text-text-muted bg-pastel-mint px-2 py-0.5 rounded-full">{note.purchaseCount} sold</span>}
                     </div>
                 </div>
             </div>
