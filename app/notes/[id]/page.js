@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -16,6 +17,7 @@ export default function NoteDetailPage({ params }) {
     const [purchased, setPurchased] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState(false);
 
     // Update meta tags for social sharing
     const updateMetaTags = (note) => {
@@ -118,6 +120,9 @@ export default function NoteDetailPage({ params }) {
                 
                 // Auto-clear success message after 5 seconds
                 setTimeout(() => setSuccess(""), 5000);
+            } else if (res.status === 402) {
+                // Insufficient balance
+                setShowInsufficientBalanceModal(true);
             } else {
                 setError(data.error || "Purchase failed");
             }
@@ -416,6 +421,65 @@ export default function NoteDetailPage({ params }) {
                     </div>
                 </div>
             </div>
+
+            {/* Insufficient Balance Modal */}
+            {showInsufficientBalanceModal && (
+                <div 
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(0, 0, 0, 0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000,
+                        padding: "1rem",
+                    }}
+                    onClick={() => setShowInsufficientBalanceModal(false)}
+                >
+                    <div 
+                        style={{
+                            background: "var(--color-surface)",
+                            borderRadius: "16px",
+                            padding: "2rem",
+                            maxWidth: "450px",
+                            width: "100%",
+                            boxShadow: "var(--shadow-xl)",
+                            textAlign: "center",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>💰</div>
+                        <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem", color: "var(--color-text)" }}>
+                            Insufficient Balance
+                        </h2>
+                        <p style={{ 
+                            marginBottom: "2rem", 
+                            color: "var(--color-text-secondary)",
+                            lineHeight: "1.6",
+                        }}>
+                            You don&apos;t have enough balance to purchase this note. Please add funds to your account to continue.
+                        </p>
+                        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={() => setShowInsufficientBalanceModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => router.push("/add-balance")}
+                            >
+                                💳 Add Funds
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

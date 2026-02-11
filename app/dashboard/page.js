@@ -100,9 +100,14 @@ export default function DashboardPage() {
 
     return (
         <div className="page-container">
-            <div className="page-header">
-                <h1 className="page-title">Dashboard</h1>
-                <p className="page-subtitle">Welcome back, {data.user?.name} ✨</p>
+            <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                    <h1 className="page-title">Dashboard</h1>
+                    <p className="page-subtitle">Welcome back, {data.user?.name} ✨</p>
+                </div>
+                <Link href="/add-balance" className="btn btn-primary">
+                    💳 Add Balance
+                </Link>
             </div>
 
             {/* Stats Overview */}

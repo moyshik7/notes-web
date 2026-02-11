@@ -2,11 +2,30 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
     const { data: session, status } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [balance, setBalance] = useState(0);
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            fetchBalance();
+        }
+    }, [status]);
+
+    async function fetchBalance() {
+        try {
+            const res = await fetch("/api/user/dashboard");
+            const data = await res.json();
+            if (res.ok && data.user) {
+                setBalance(data.user.walletBalance || 0);
+            }
+        } catch {
+            // Silently fail
+        }
+    }
 
     return (
         <nav className="navbar">
@@ -45,6 +64,29 @@ export default function Navbar() {
                         <div className="nav-skeleton" />
                     ) : status === "authenticated" ? (
                         <div className="nav-user">
+                            <Link 
+                                href="/add-balance"
+                                style={{
+                                    background: "var(--pastel-mint)",
+                                    padding: "0.5rem 1rem",
+                                    borderRadius: "999px",
+                                    fontSize: "0.875rem",
+                                    fontWeight: 600,
+                                    color: "var(--color-text)",
+                                    border: "1px solid var(--color-border)",
+                                    transition: "all 0.2s ease",
+                                    marginRight: "1rem",
+                                    textDecoration: "none",
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = "var(--pastel-blue)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = "var(--pastel-mint)";
+                                }}
+                            >
+                                💰 ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                            </Link>
                             <span className="nav-user-name">{session.user.name}</span>
                             <button onClick={() => signOut({ callbackUrl: "/" })} className="btn btn-outline btn-sm">
                                 Sign Out
@@ -71,6 +113,27 @@ export default function Navbar() {
             {/* Mobile Menu */}
             {mobileOpen && (
                 <div className="navbar-mobile-menu">
+                    {status === "authenticated" && (
+                        <Link 
+                            href="/add-balance" 
+                            style={{
+                                background: "var(--pastel-mint)",
+                                padding: "0.75rem 1rem",
+                                borderRadius: "12px",
+                                fontSize: "0.875rem",
+                                fontWeight: 600,
+                                color: "var(--color-text)",
+                                border: "1px solid var(--color-border)",
+                                marginBottom: "1rem",
+                                display: "block",
+                                textAlign: "center",
+                                textDecoration: "none",
+                            }}
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            💰 Balance: ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                        </Link>
+                    )}
                     <Link href="/" className="nav-link" onClick={() => setMobileOpen(false)}>
                         Marketplace
                     </Link>

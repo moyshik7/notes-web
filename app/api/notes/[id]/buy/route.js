@@ -53,10 +53,23 @@ export async function POST(request, { params }) {
       );
     }
 
+    // Check if buyer has enough balance
+    if (buyer.walletBalance < note.price) {
+      return NextResponse.json(
+        { error: "Insufficient balance. Please add funds to your account." },
+        { status: 402 }
+      );
+    }
+
     // Calculate revenue split
     const totalAmount = note.price;
     const sellerAmount = Math.round(totalAmount * 0.9 * 100) / 100; // 90%
     const platformAmount = Math.round(totalAmount * 0.1 * 100) / 100; // 10%
+
+    // Deduct amount from buyer's wallet
+    buyer.walletBalance -= totalAmount;
+    buyer.purchasedNotes.push(note._id);
+    await buyer.save();
 
     // Create transaction
     const transaction = await Transaction.create({
@@ -66,10 +79,6 @@ export async function POST(request, { params }) {
       sellerAmount,
       platformAmount,
     });
-
-    // Add note to buyer's purchased list
-    buyer.purchasedNotes.push(note._id);
-    await buyer.save();
 
     // Credit seller's wallet
     await User.findByIdAndUpdate(note.uploader, {
@@ -89,6 +98,7 @@ export async function POST(request, { params }) {
         sellerAmount,
         platformAmount,
       },
+      newBalance: buyer.walletBalance,
     });
   } catch (error) {
     console.error("[Buy] Error:", error);
