@@ -23,7 +23,7 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const { status, feedback } = await request.json();
+    const { status, feedback, preview, images } = await request.json();
 
     if (!["Approved", "Rejected"].includes(status)) {
       return NextResponse.json(
@@ -32,10 +32,14 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Update note status
+    // Update note status and optional image fields
+    const updateData = { status };
+    if (preview !== undefined) updateData.preview = preview;
+    if (images !== undefined) updateData.images = images;
+    
     const note = await Note.findByIdAndUpdate(
       id,
-      { status },
+      updateData,
       { new: true }
     );
 

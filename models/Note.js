@@ -45,6 +45,14 @@ const NoteSchema = new mongoose.Schema(
             type: String, // R2 object key for cover thumbnail
             default: "",
         },
+        preview: {
+            type: String, // Image URL for cover/OG/Twitter card
+            default: "",
+        },
+        images: {
+            type: [String], // Array of image URLs for additional images
+            default: [],
+        },
         uploader: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

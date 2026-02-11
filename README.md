@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Notes Bechakena App
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Todo
+- make sure the user cannot abuse the upload by uploading random files
+    - only allow .pdf files
+    - set max file size to 50mb
+    - Set limit to 5 pending uploads
+        - meaning a user cannot have more than 5 uploaded files as pending
+        - If the user tries to upload more than 5 as pending, show error
+        - each user will have a personal upload limit.
+        - the default is 5
+    - When a file is rejected, delete it from r2 bucket
+    - The admin can delete any already approved file from the site through the admin dashboard
+- Add payment system
+    - All users will have a balance
+        - They can increase the balance by either cashing in through add balance
+        - Or through selling notes to other users.
+    - When someone tries to purchase something, they pay from their account balance
+    - If they don't have enough balance, they are shown a modal saying not enough balance and a button "Add Funds"
+    - The add funds button will redirect them to the add balance page.

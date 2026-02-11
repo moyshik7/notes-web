@@ -17,14 +17,47 @@ export default function NoteDetailPage({ params }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    // Update meta tags for social sharing
+    const updateMetaTags = (note) => {
+        if (!note.preview) return;
+
+        const metaTags = [
+            { property: "og:title", content: note.title },
+            { property: "og:description", content: note.description },
+            { property: "og:image", content: note.preview },
+            { property: "og:type", content: "product" },
+            { name: "twitter:card", content: "summary_large_image" },
+            { name: "twitter:title", content: note.title },
+            { name: "twitter:description", content: note.description },
+            { name: "twitter:image", content: note.preview },
+        ];
+
+        metaTags.forEach(({ property, name, content }) => {
+            const selector = property ? `meta[property="${property}"]` : `meta[name="${name}"]`;
+            let meta = document.querySelector(selector);
+            
+            if (!meta) {
+                meta = document.createElement("meta");
+                if (property) meta.setAttribute("property", property);
+                if (name) meta.setAttribute("name", name);
+                document.head.appendChild(meta);
+            }
+            
+            meta.setAttribute("content", content);
+        });
+    };
+
     const fetchNote = useCallback(async () => {
         try {
             const res = await fetch(`/api/notes/${id}`);
             const data = await res.json();
             if (res.ok) {
                 setNote(data.note);
-                // Update page title for SEO
+                // Update page title and meta tags for SEO
                 document.title = `${data.note.title} — NoteNibo`;
+                
+                // Update OG and Twitter meta tags
+                updateMetaTags(data.note);
             } else {
                 setError(data.error || "Note not found");
             }
@@ -155,6 +188,7 @@ export default function NoteDetailPage({ params }) {
                         "@type": "Product",
                         name: note.title,
                         description: note.description,
+                        ...(note.preview && { image: note.preview }),
                         offers: {
                             "@type": "Offer",
                             priceCurrency: "BDT",
@@ -191,9 +225,25 @@ export default function NoteDetailPage({ params }) {
                 <div className="note-detail-main">
                     {/* Preview Area */}
                     <div className="note-preview">
+                        {note.preview ? (
+                            <img 
+                                src={note.preview} 
+                                alt={note.title}
+                                style={{
+                                    width: "100%",
+                                    height: "400px",
+                                    objectFit: "cover",
+                                    borderRadius: "12px",
+                                    marginBottom: "1rem",
+                                }}
+                            />
+                        ) : (
+                            <div style={{ textAlign: "center", padding: "4rem 0" }}>
+                                <div style={{ fontSize: "4rem", marginBottom: "1rem", animation: "float 3s ease-in-out infinite" }}>📝</div>
+                                <p style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>PDF Preview</p>
+                            </div>
+                        )}
                         <div style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: "4rem", marginBottom: "1rem", animation: "float 3s ease-in-out infinite" }}>📝</div>
-                            <p style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>PDF Preview</p>
                             {(purchased || isOwner) ? (
                                 <p
                                     style={{
@@ -244,6 +294,50 @@ export default function NoteDetailPage({ params }) {
                         </div>
 
                         <p className="note-detail-description">{note.description}</p>
+
+                        {/* Additional Images Gallery */}
+                        {note.images && note.images.length > 0 && (
+                            <div style={{ marginTop: "2rem" }}>
+                                <h3 style={{ 
+                                    fontSize: "1.1rem", 
+                                    marginBottom: "1rem",
+                                    color: "var(--color-text-secondary)" 
+                                }}>
+                                    📸 Preview Images
+                                </h3>
+                                <div style={{ 
+                                    display: "grid", 
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                                    gap: "1rem",
+                                }}>
+                                    {note.images.map((imageUrl, index) => (
+                                        <img 
+                                            key={index}
+                                            src={imageUrl} 
+                                            alt={`${note.title} - Image ${index + 1}`}
+                                            style={{
+                                                width: "100%",
+                                                height: "200px",
+                                                objectFit: "cover",
+                                                borderRadius: "12px",
+                                                border: "1px solid var(--color-border)",
+                                                cursor: "pointer",
+                                                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.transform = "scale(1.05)";
+                                                e.target.style.boxShadow = "var(--shadow-md)";
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.transform = "scale(1)";
+                                                e.target.style.boxShadow = "none";
+                                            }}
+                                            onClick={() => window.open(imageUrl, "_blank")}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -317,18 +411,6 @@ export default function NoteDetailPage({ params }) {
                             >
                                 <span>🔓 Access</span>
                                 <span style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>Lifetime</span>
-                            </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    fontSize: "0.8rem",
-                                    color: "var(--color-text-muted)",
-                                    padding: "0.25rem 0",
-                                }}
-                            >
-                                <span>💖 Seller receives</span>
-                                <span style={{ fontWeight: 600, color: "var(--color-accent-dark)" }}>90% of price</span>
                             </div>
                         </div>
                     </div>

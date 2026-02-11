@@ -4,8 +4,24 @@ export default function NoteCard({ note }) {
     const formattedPrice = new Intl.NumberFormat("en-BD").format(note.price);
 
     return (
-        <Link href={`/notes/${note._id}`} className="note-card">
-            <div className="note-card-header">
+        <Link href={`/notes/${note._id}`} className="note-card">            {note.preview && (
+                <div style={{
+                    width: "100%",
+                    height: "180px",
+                    overflow: "hidden",
+                    borderRadius: "12px 12px 0 0",
+                }}>
+                    <img 
+                        src={note.preview}
+                        alt={note.title}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                        }}
+                    />
+                </div>
+            )}            <div className="note-card-header">
                 <div className="note-card-icon">�</div>
                 <div className="note-card-badge">{note.subject}</div>
             </div>
