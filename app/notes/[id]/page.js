@@ -17,6 +17,24 @@ export default function NoteDetailPage({ params }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    const fetchNote = async () => {
+        try {
+            const res = await fetch(`/api/notes/${id}`);
+            const data = await res.json();
+            if (res.ok) {
+                setNote(data.note);
+                // Update page title for SEO
+                document.title = `${data.note.title} — NoteNibo`;
+            } else {
+                setError(data.error || "Note not found");
+            }
+        } catch {
+            setError("Failed to load note");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchNote();
     }, [id]);
@@ -40,24 +58,6 @@ export default function NoteDetailPage({ params }) {
             checkPurchase();
         }
     }, [session, note, id]);
-
-    async function fetchNote() {
-        try {
-            const res = await fetch(`/api/notes/${id}`);
-            const data = await res.json();
-            if (res.ok) {
-                setNote(data.note);
-                // Update page title for SEO
-                document.title = `${data.note.title} — NoteNibo`;
-            } else {
-                setError(data.error || "Note not found");
-            }
-        } catch {
-            setError("Failed to load note");
-        } finally {
-            setLoading(false);
-        }
-    }
 
     async function handleBuy() {
         if (authStatus !== "authenticated") {
