@@ -5,13 +5,14 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Note from "@/models/Note";
 import Transaction from "@/models/Transaction";
+import BalanceRequest from "@/models/BalanceRequest";
 import AdminDashboard from "@/components/AdminDashboard";
 
 async function getAdminData() {
     await connectDB();
 
     // Get stats
-    const [totalRevenue, totalNotes, pendingCount, approvedCount, rejectedCount, totalTransactions] = await Promise.all([
+    const [totalRevenue, totalNotes, pendingCount, approvedCount, rejectedCount, totalTransactions, pendingBalanceCount] = await Promise.all([
         Transaction.aggregate([
             {
                 $group: {
@@ -26,6 +27,7 @@ async function getAdminData() {
         Note.countDocuments({ status: "Approved" }),
         Note.countDocuments({ status: "Rejected" }),
         Transaction.countDocuments(),
+        BalanceRequest.countDocuments({ status: "Pending" }),
     ]);
 
     const stats = {
@@ -36,6 +38,7 @@ async function getAdminData() {
         approvedCount,
         rejectedCount,
         totalTransactions,
+        pendingBalanceCount,
     };
 
     // Get pending notes
@@ -53,9 +56,30 @@ async function getAdminData() {
         updatedAt: note.updatedAt.toISOString(),
     }));
 
+    // Get pending balance requests
+    const pendingBalanceRequests = await BalanceRequest.find({ status: "Pending" })
+        .populate("userId", "name email")
+        .sort({ createdAt: -1 })
+        .lean();
+
+    const serializedBalanceRequests = pendingBalanceRequests.map((req) => ({
+        _id: req._id.toString(),
+        amount: req.amount,
+        method: req.method,
+        transactionId: req.transactionId,
+        status: req.status,
+        createdAt: req.createdAt.toISOString(),
+        user: req.userId ? {
+            _id: req.userId._id.toString(),
+            name: req.userId.name,
+            email: req.userId.email,
+        } : null,
+    }));
+
     return {
         stats,
         pendingNotes: serializedNotes,
+        pendingBalanceRequests: serializedBalanceRequests,
     };
 }
 

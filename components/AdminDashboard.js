@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function AdminDashboard({ initialData }) {
     const [data, setData] = useState(initialData);
     const [actionLoading, setActionLoading] = useState(null);
+    const [balanceActionLoading, setBalanceActionLoading] = useState(null);
     const [reviewModal, setReviewModal] = useState(null);
     const [previewUrl, setPreviewUrl] = useState("");
     const [imageUrls, setImageUrls] = useState("");
@@ -57,6 +58,31 @@ export default function AdminDashboard({ initialData }) {
         }
     }
 
+    async function handleBalanceAction(requestId, action) {
+        setBalanceActionLoading(requestId);
+        try {
+            const adminNote = action === "Rejected" ? prompt("Rejection reason (optional):") : "";
+            
+            const res = await fetch(`/api/admin/balance-requests/${requestId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: action, adminNote: adminNote || "" }),
+            });
+
+            if (res.ok) {
+                // Refresh data
+                await fetchStats();
+            } else {
+                const err = await res.json();
+                alert(err.error || "Action failed");
+            }
+        } catch {
+            alert("Failed to update balance request");
+        } finally {
+            setBalanceActionLoading(null);
+        }
+    }
+
     function submitReview() {
         if (!reviewModal) return;
         
@@ -94,9 +120,15 @@ export default function AdminDashboard({ initialData }) {
                     <div className="stat-value">{data.stats?.totalNotes || 0}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">Pending Approvals</div>
+                    <div className="stat-label">Pending Note Approvals</div>
                     <div className="stat-value" style={{ color: "var(--color-warning)" }}>
                         {data.stats?.pendingCount || 0}
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Pending Balance Requests</div>
+                    <div className="stat-value" style={{ color: "var(--color-warning)" }}>
+                        {data.stats?.pendingBalanceCount || 0}
                     </div>
                 </div>
                 <div className="stat-card">
@@ -197,6 +229,106 @@ export default function AdminDashboard({ initialData }) {
                     <div className="empty-state-icon">✅</div>
                     <h3 className="empty-state-title">All caught up!</h3>
                     <p className="empty-state-text">No notes pending approval.</p>
+                </div>
+            )}
+
+            {/* Pending Balance Requests */}
+            <div className="page-header" style={{ marginTop: "2rem" }}>
+                <h2 className="page-title" style={{ fontSize: "1.5rem" }}>
+                    💳 Pending Balance Requests
+                </h2>
+            </div>
+
+            {data.pendingBalanceRequests?.length > 0 ? (
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Transaction ID</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.pendingBalanceRequests.map((req) => (
+                                <tr key={req._id}>
+                                    <td>
+                                        <strong>{req.user?.name || "Unknown"}</strong>
+                                        <br />
+                                        <span
+                                            style={{
+                                                fontSize: "0.7rem",
+                                                color: "var(--color-text-muted)",
+                                            }}
+                                        >
+                                            {req.user?.email || "N/A"}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "0.25rem",
+                                                padding: "0.25rem 0.5rem",
+                                                borderRadius: "var(--radius-sm)",
+                                                fontWeight: 600,
+                                                fontSize: "0.8rem",
+                                                textTransform: "capitalize",
+                                                background: req.method === "bkash" ? "#FDF0F5" : "#FFF7ED",
+                                                color: req.method === "bkash" ? "#E2136E" : "#F6921E",
+                                            }}
+                                        >
+                                            {req.method === "bkash" ? "🔴" : "🟠"} {req.method}
+                                        </span>
+                                    </td>
+                                    <td style={{ fontWeight: 600 }}>
+                                        ৳{new Intl.NumberFormat("en-BD").format(req.amount)}
+                                    </td>
+                                    <td>
+                                        <code
+                                            style={{
+                                                background: "var(--pastel-purple)",
+                                                padding: "0.25rem 0.5rem",
+                                                borderRadius: "var(--radius-sm)",
+                                                fontSize: "0.85rem",
+                                            }}
+                                        >
+                                            {req.transactionId}
+                                        </code>
+                                    </td>
+                                    <td>{new Date(req.createdAt).toLocaleDateString("en-BD")}</td>
+                                    <td>
+                                        <div className="flex gap-1">
+                                            <button
+                                                className="btn btn-success btn-sm"
+                                                onClick={() => handleBalanceAction(req._id, "Approved")}
+                                                disabled={balanceActionLoading === req._id}
+                                            >
+                                                {balanceActionLoading === req._id ? "..." : "✓ Approve"}
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() => handleBalanceAction(req._id, "Rejected")}
+                                                disabled={balanceActionLoading === req._id}
+                                            >
+                                                {balanceActionLoading === req._id ? "..." : "✕ Reject"}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="empty-state">
+                    <div className="empty-state-icon">💳</div>
+                    <h3 className="empty-state-title">No pending requests</h3>
+                    <p className="empty-state-text">All balance requests have been processed.</p>
                 </div>
             )}
 

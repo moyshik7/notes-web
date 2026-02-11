@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import BalanceRequest from "@/models/BalanceRequest";
+import { sendBalanceRequestToTelegram } from "@/lib/telegram";
 
 export async function POST(request) {
   try {
@@ -14,7 +16,7 @@ export async function POST(request) {
 
     await connectDB();
 
-    const { amount } = await request.json();
+    const { amount, method, transactionId } = await request.json();
 
     // Validate amount
     if (!amount || isNaN(amount) || amount <= 0) {
@@ -40,13 +42,37 @@ export async function POST(request) {
       );
     }
 
-    // Update user balance
-    const user = await User.findByIdAndUpdate(
-      session.user.id,
-      { $inc: { walletBalance: amountNum } },
-      { new: true }
-    );
+    // Validate method
+    if (!method || !["bkash", "nagad"].includes(method)) {
+      return NextResponse.json(
+        { error: "Invalid payment method" },
+        { status: 400 }
+      );
+    }
 
+    // Validate transaction ID
+    if (!transactionId || transactionId.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Transaction ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if transaction ID already exists
+    const existingRequest = await BalanceRequest.findOne({ 
+      transactionId: transactionId.trim() 
+    });
+    
+    if (existingRequest) {
+      return NextResponse.json(
+        { error: "This transaction ID has already been used" },
+        { status: 400 }
+      );
+    }
+
+    // Get user info
+    const user = await User.findById(session.user.id);
+    
     if (!user) {
       return NextResponse.json(
         { error: "User not found" },
@@ -54,15 +80,34 @@ export async function POST(request) {
       );
     }
 
+    // Create a pending balance request
+    const balanceRequest = await BalanceRequest.create({
+      userId: session.user.id,
+      amount: amountNum,
+      method: method,
+      transactionId: transactionId.trim(),
+      status: "Pending",
+    });
+
+    // Send notification to Telegram
+    await sendBalanceRequestToTelegram({
+      requestId: balanceRequest._id.toString(),
+      userName: user.name,
+      userEmail: user.email,
+      userId: user._id.toString(),
+      amount: amountNum,
+      method: method,
+      transactionId: transactionId.trim(),
+    });
+
     return NextResponse.json({
-      message: "Balance added successfully",
-      newBalance: user.walletBalance,
-      amountAdded: amountNum,
+      message: "Balance request submitted successfully",
+      requestId: balanceRequest._id,
     });
   } catch (error) {
     console.error("[Add Balance] Error:", error);
     return NextResponse.json(
-      { error: "Failed to add balance" },
+      { error: "Failed to submit balance request" },
       { status: 500 }
     );
   }

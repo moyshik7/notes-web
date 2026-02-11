@@ -5,6 +5,7 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Note from "@/models/Note";
 import Transaction from "@/models/Transaction";
+import BalanceRequest from "@/models/BalanceRequest";
 
 export async function GET() {
   try {
@@ -22,13 +23,14 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [totalNotes, pendingCount, approvedCount, rejectedCount, transactions] =
+    const [totalNotes, pendingCount, approvedCount, rejectedCount, transactions, pendingBalanceCount] =
       await Promise.all([
         Note.countDocuments(),
         Note.countDocuments({ status: "Pending" }),
         Note.countDocuments({ status: "Approved" }),
         Note.countDocuments({ status: "Rejected" }),
         Transaction.find().lean(),
+        BalanceRequest.countDocuments({ status: "Pending" }),
       ]);
 
     const totalRevenue = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -43,6 +45,27 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .lean();
 
+    // Get pending balance requests for review
+    const pendingBalanceRequests = await BalanceRequest.find({ status: "Pending" })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Serialize balance requests
+    const serializedBalanceRequests = pendingBalanceRequests.map((req) => ({
+      _id: req._id.toString(),
+      amount: req.amount,
+      method: req.method,
+      transactionId: req.transactionId,
+      status: req.status,
+      createdAt: req.createdAt.toISOString(),
+      user: req.userId ? {
+        _id: req.userId._id.toString(),
+        name: req.userId.name,
+        email: req.userId.email,
+      } : null,
+    }));
+
     return NextResponse.json({
       stats: {
         totalNotes,
@@ -52,8 +75,10 @@ export async function GET() {
         totalRevenue,
         platformRevenue,
         totalTransactions: transactions.length,
+        pendingBalanceCount,
       },
       pendingNotes,
+      pendingBalanceRequests: serializedBalanceRequests,
     });
   } catch (error) {
     console.error("[Admin Stats] Error:", error);
