@@ -89,7 +89,12 @@ export default function SellPage() {
             const data = new FormData();
             data.append("title", formData.title);
             data.append("description", formData.description);
-            data.append("topics", formData.topics);
+            // Convert comma-separated topics to JSON array
+            const topicsArray = formData.topics
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t.length > 0);
+            data.append("topics", JSON.stringify(topicsArray));
             data.append("subject", formData.subject);
             data.append("price", formData.price);
             if (file) data.append("file", file);
