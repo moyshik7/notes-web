@@ -210,13 +210,13 @@ export default function NoteDetailPage({ params }) {
                                 <h3 className="text-lg mb-4 text-center text-text-secondary">
                                     <Camera size={18} className="inline align-middle" /> Preview Images
                                 </h3>
-                                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                                <div className="flex flex-row flex-wrap gap-4">
                                     {note.images.map((imageUrl, index) => (
                                         <img
                                             key={index}
                                             src={imageUrl}
                                             alt={`${note.title} - Image ${index + 1}`}
-                                            className="w-full h-[200px] object-cover rounded-xl border border-border cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md"
+                                            className="w-full rounded-xl cursor-pointer shadow-md"
                                             onClick={() => window.open(imageUrl, "_blank")}
                                         />
                                     ))}

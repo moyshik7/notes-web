@@ -1,86 +1,34 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import NoteCard from "@/components/NoteCard";
-import { useCache } from "@/lib/useCache";
-import { Sparkles, Star, Search as SearchIcon, CreditCard, ArrowRight, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import connectDB from "@/lib/mongodb";
+import Note from "@/models/Note";
+import HomeSearch from "@/components/HomeSearch";
+import HomeFAQ from "@/components/HomeFAQ";
+import HomeStats from "@/components/HomeStats";
+import { Sparkles, Star, Search as SearchIcon, CreditCard, ArrowRight } from "lucide-react";
 
-export default function HomePage() {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedTopic, setSelectedTopic] = useState("");
-    const [searchResults, setSearchResults] = useState(null);
-    const [searching, setSearching] = useState(false);
-    const [openFAQ, setOpenFAQ] = useState(null);
+export const revalidate = 3600; // ISR: Revalidate every hour
 
-    const toggleFAQ = (index) => {
-        setOpenFAQ(openFAQ === index ? null : index);
+async function getHomeData() {
+    await connectDB();
+
+    const [featuredNotes, topics] = await Promise.all([
+        Note.find({ status: "Approved" })
+            .populate("uploader", "name image")
+            .sort({ createdAt: -1 }) // Newest first
+            .limit(12)
+            .lean(),
+        Note.distinct("topics", { status: "Approved" }),
+    ]);
+
+    return {
+        notes: JSON.parse(JSON.stringify(featuredNotes)),
+        topics: topics.sort(),
     };
+}
 
-    // Cache topics list (5 min TTL)
-    const { data: topicsData } = useCache(
-        "home-topics",
-        useCallback(async () => {
-            const res = await fetch("/api/notes?distinct=topics");
-            return res.json();
-        }, []),
-        5 * 60 * 1000,
-    );
-
-    // Cache initial notes (2 min TTL)
-    const { data: notesData, loading: notesLoading } = useCache(
-        "home-notes",
-        useCallback(async () => {
-            const res = await fetch("/api/notes?limit=12");
-            return res.json();
-        }, []),
-        2 * 60 * 1000,
-    );
-
-    const availableTopics = topicsData?.topics || [];
-    const displayNotes = searchResults !== null ? searchResults : notesData?.notes || [];
-    const isLoading = searchResults === null && notesLoading;
-
-    // Re-fetch when topic filter changes
-    useEffect(() => {
-        if (!selectedTopic && searchResults === null) return;
-        fetchFilteredNotes();
-    }, [selectedTopic]);
-
-    async function fetchFilteredNotes(query) {
-        setSearching(true);
-        try {
-            const params = new URLSearchParams();
-            if (query || searchQuery) params.set("q", query || searchQuery);
-            if (selectedTopic) params.set("topic", selectedTopic);
-            const res = await fetch(`/api/notes?${params.toString()}`);
-            const data = await res.json();
-            setSearchResults(data.notes || []);
-        } catch (error) {
-            console.error("Failed to fetch notes:", error);
-        } finally {
-            setSearching(false);
-        }
-    }
-
-    function handleSearch(e) {
-        e.preventDefault();
-        if (!searchQuery && !selectedTopic) {
-            setSearchResults(null);
-            return;
-        }
-        fetchFilteredNotes(searchQuery);
-    }
-
-    function handleTopicClick(topic) {
-        if (topic === selectedTopic) {
-            setSelectedTopic("");
-            if (!searchQuery) setSearchResults(null);
-        } else {
-            setSelectedTopic(topic);
-        }
-    }
+export default async function HomePage() {
+    const { notes, topics } = await getHomeData();
 
     return (
         <>
@@ -101,21 +49,8 @@ export default function HomePage() {
                     <p className="text-lg text-text-secondary mb-10 max-w-[600px] mx-auto leading-relaxed">
                         Access high-quality lecture notes, summaries, and study guides. Ace your exams with materials from top students across Bangladesh.
                     </p>
-                    <form className="flex max-sm:flex-col gap-2 max-w-[600px] mx-auto bg-white/70 backdrop-blur-xl border-2 border-border/80 rounded-3xl max-sm:rounded-2xl p-1.5 shadow-lg shadow-primary/5 focus-within:bg-white/95 focus-within:border-accent-light focus-within:shadow-[0_0_32px_rgba(253,121,168,0.15)] transition-all duration-300" onSubmit={handleSearch}>
-                        <div className="relative flex-1 flex items-center">
-                            <SearchIcon className="absolute left-4 text-text-muted" size={20} />
-                            <input 
-                                type="text" 
-                                className="w-full border-none bg-transparent pl-12 pr-4 py-3 text-[0.95rem] text-text-main outline-none font-sans placeholder:text-text-muted" 
-                                placeholder="Search by subject, code, or topic..." 
-                                value={searchQuery} 
-                                onChange={(e) => setSearchQuery(e.target.value)} 
-                            />
-                        </div>
-                        <button type="submit" className="px-8 py-3 bg-gradient-to-br from-accent to-primary text-white border-none rounded-2xl max-sm:rounded-xl font-bold text-sm cursor-pointer hover:shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 font-sans whitespace-nowrap">
-                            Search
-                        </button>
-                    </form>
+                    
+                    <HomeSearch availableTopics={topics} />
                     
                     {/* Trusted Tags */}
                     <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm text-text-secondary font-medium animate-fade-in [animation-delay:200ms]">
@@ -127,75 +62,53 @@ export default function HomePage() {
             </section>
 
             {/* Trust Stats Bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-10 px-6 bg-surface border-b border-border animate-fade-in">
-                <div className="text-center">
-                    <div className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent">5+</div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mt-1">Notes Shared</div>
-                </div>
-                <div className="text-center">
-                    <div className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent">2+</div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mt-1">Happy Students</div>
-                </div>
-                <div className="text-center">
-                    <div className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent">2+</div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mt-1">Universities</div>
-                </div>
-                <div className="text-center">
-                    <div className="font-display text-3xl font-extrabold bg-gradient-to-br from-primary to-accent-dark bg-clip-text text-transparent">5.0<Star size={18} className="inline align-text-top ml-1 fill-current" /></div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mt-1">Avg. Rating</div>
-                </div>
-            </div>
+            <HomeStats />
 
             {/* Main Content */}
             <div className="max-w-[1280px] mx-auto px-6 py-12 animate-fade-in">
 
-
-                {/* Topic Filter */}
+                {/* Topic Filter Links */}
                 <div className="flex gap-2 mb-8 flex-wrap animate-fade-in justify-center">
-                    <button
-                        className={`px-5 py-2.5 rounded-full border-2 text-sm font-semibold cursor-pointer font-sans transition-all duration-200 ${!selectedTopic ? "border-transparent text-white bg-gradient-to-r from-accent to-primary shadow-lg shadow-accent/20" : "border-border bg-surface text-text-secondary hover:border-accent-light hover:text-accent-dark hover:bg-pastel-pink"}`}
-                        onClick={() => {
-                            setSelectedTopic("");
-                            if (!searchQuery) setSearchResults(null);
-                        }}
+                    <Link
+                        href="/notes"
+                        className="px-5 py-2.5 rounded-full border-2 text-sm font-semibold cursor-pointer font-sans transition-all duration-200 border-border bg-surface text-text-secondary hover:border-accent-light hover:text-accent-dark hover:bg-pastel-pink"
                     >
-                        All Topics
-                    </button>
-                    {availableTopics.map((topic) => (
-                        <button key={topic} className={`px-5 py-2.5 rounded-full border-2 text-sm font-semibold cursor-pointer font-sans transition-all duration-200 ${selectedTopic === topic ? "border-transparent text-white bg-gradient-to-r from-accent to-primary shadow-lg shadow-accent/20" : "border-border bg-surface text-text-secondary hover:border-accent-light hover:text-accent-dark hover:bg-pastel-pink"}`} onClick={() => handleTopicClick(topic)}>
+                        View All
+                    </Link>
+                    {topics.slice(0, 10).map((topic) => (
+                        <Link 
+                            key={topic} 
+                            href={`/notes?topic=${encodeURIComponent(topic)}`}
+                            className="px-5 py-2.5 rounded-full border-2 text-sm font-semibold cursor-pointer font-sans transition-all duration-200 border-border bg-surface text-text-secondary hover:border-accent-light hover:text-accent-dark hover:bg-pastel-pink"
+                        >
                             {topic}
-                        </button>
+                        </Link>
                     ))}
+                    {topics.length > 10 && (
+                        <Link
+                            href="/notes"
+                            className="px-5 py-2.5 rounded-full border-2 text-sm font-semibold cursor-pointer font-sans transition-all duration-200 border-border bg-surface text-text-secondary hover:border-accent-light hover:text-accent-dark hover:bg-pastel-pink"
+                        >
+                            +{topics.length - 10} more
+                        </Link>
+                    )}
                 </div>
 
-                {/* Notes Grid */}
+                {/* Featured Notes Grid */}
                 <section className="mb-20">
                     <div className="flex items-end justify-between mb-8 max-sm:flex-col max-sm:items-start max-sm:gap-4">
                         <div>
-                            <h2 className="font-display text-3xl font-extrabold text-text-main mb-2">{selectedTopic || searchQuery ? "Search Results" : "Featured Notes"}</h2>
-                            <p className="text-base text-text-secondary">{selectedTopic || searchQuery ? `Showing notes${selectedTopic ? ` in "${selectedTopic}"` : ""}${searchQuery ? ` matching "${searchQuery}"` : ""}` : "Recently approved, top-quality study materials"}</p>
+                            <h2 className="font-display text-3xl font-extrabold text-text-main mb-2">Featured Notes</h2>
+                            <p className="text-base text-text-secondary">Recently approved, top-quality study materials</p>
                         </div>
-                        {!selectedTopic && !searchQuery && (
-                             <Link href="/notes" className="text-sm font-bold text-accent hover:text-accent-dark flex items-center gap-1 transition-colors">
-                                View All Notes <ArrowRight size={16} />
-                             </Link>
-                        )}
+                        <Link href="/notes" className="text-sm font-bold text-accent hover:text-accent-dark flex items-center gap-1 transition-colors">
+                            View All Notes <ArrowRight size={16} />
+                        </Link>
                     </div>
 
-                    {isLoading || searching ? (
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] max-sm:grid-cols-1 gap-6">
-                            {[...Array(6)].map((_, i) => (
-                                <div key={i} className="bg-surface border border-border rounded-2xl overflow-hidden p-5 h-[340px]">
-                                    <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer w-12 h-12 rounded-xl mb-4" />
-                                    <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-4 rounded-md mb-3 w-3/4" />
-                                    <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-4 rounded-md mb-3 w-full" />
-                                    <div className="bg-gradient-to-r from-pastel-purple via-pastel-pink to-pastel-purple bg-[length:200%_100%] animate-shimmer h-4 rounded-md w-1/2" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : displayNotes.length > 0 ? (
+                    {notes.length > 0 ? (
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] max-sm:grid-cols-1 gap-8">
-                            {displayNotes.map((note) => (
+                            {notes.map((note) => (
                                 <NoteCard key={note._id} note={note} />
                             ))}
                         </div>
@@ -203,13 +116,13 @@ export default function HomePage() {
                         <div className="text-center py-20 px-8 bg-surface border border-dashed border-border rounded-3xl">
                             <div className="text-6xl mb-4 animate-float"><Sparkles size={48} className="text-accent-light mx-auto" /></div>
                             <h3 className="font-display text-xl font-bold text-text-main mb-2">No notes found</h3>
-                            <p className="text-text-secondary max-w-[400px] mx-auto leading-relaxed mb-6">{searchQuery || selectedTopic ? "Try adjusting your search terms or filters to find what you're looking for." : "Be the first to upload your notes and start earning!"}</p>
-                             <button 
-                                onClick={() => {setSearchQuery(""); setSelectedTopic("");}}
-                                className="px-6 py-2.5 border-2 border-border rounded-xl font-semibold text-text-secondary hover:border-accent hover:text-accent transition-all"
+                            <p className="text-text-secondary max-w-[400px] mx-auto leading-relaxed mb-6">Be the first to upload your notes and start earning!</p>
+                             <Link 
+                                href="/sell"
+                                className="inline-block px-6 py-2.5 border-2 border-border rounded-xl font-semibold text-text-secondary hover:border-accent hover:text-accent transition-all"
                              >
-                                Clear Filters
-                             </button>
+                                Start Selling
+                             </Link>
                         </div>
                     )}
                 </section>
@@ -280,41 +193,7 @@ export default function HomePage() {
                      <div className="text-center mb-10">
                         <h2 className="font-display text-3xl font-extrabold text-text-main mb-3">Frequently Asked Questions</h2>
                     </div>
-                    <div className="space-y-4">
-                        {[
-                            { q: "How do I buy notes?", a: "Simply browse for the notes you need, click 'Buy Now', and complete the payment using bKash, Nagad, or Rocket. You'll get instant access." },
-                            { q: "Can I sell my handwritten notes?", a: "Yes! Scan your notes clearly (PDF preferred), upload them via the 'Sell' page, and set your price. Once approved, they'll be listed." },
-                            { q: "Is it free to join?", a: "Absolutely! creating an account is 100% free. We only charge a small commission when you sell a note." }
-                        ].map((faq, i) => (
-                             <div key={i} className="group bg-surface border border-border rounded-2xl overflow-hidden">
-                                <button 
-                                    onClick={() => toggleFAQ(i)}
-                                    className="w-full flex cursor-pointer items-center justify-between gap-1.5 p-6 text-text-main font-bold hover:bg-pastel-purple/30 transition-colors text-left"
-                                >
-                                    <span className="text-lg">{faq.q}</span>
-                                    <span className={`shrink-0 rounded-full bg-white p-1.5 text-text-main sm:p-3 shadow-sm border border-border transition-transform duration-300 ${openFAQ === i ? "-rotate-180" : ""}`}>
-                                        <ChevronDown size={20} />
-                                    </span>
-                                </button>
-                                <AnimatePresence>
-                                    {openFAQ === i && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="px-6 pb-6 pt-2 leading-relaxed text-text-secondary">
-                                                {faq.a}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        ))}
-                       
-                    </div>
+                    <HomeFAQ />
                 </section>
 
                 {/* CTA Section */}
