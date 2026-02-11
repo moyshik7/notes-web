@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { Flower2, Wallet, X, Menu } from "lucide-react";
 
 export default function Navbar() {
     const { data: session, status } = useSession();
@@ -32,7 +33,7 @@ export default function Navbar() {
             <div className="navbar-container">
                 {/* Logo */}
                 <Link href="/" className="navbar-logo">
-                    <span className="logo-icon">🌸</span>
+                    <span className="logo-icon"><Flower2 size={20} /></span>
                     <span className="logo-text">NoteNibo</span>
                 </Link>
 
@@ -85,7 +86,7 @@ export default function Navbar() {
                                     e.target.style.background = "var(--pastel-mint)";
                                 }}
                             >
-                                💰 ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                                <Wallet size={16} style={{ display: "inline", verticalAlign: "middle" }} /> ৳{new Intl.NumberFormat("en-BD").format(balance)}
                             </Link>
                             <span className="nav-user-name">{session.user.name}</span>
                             <button onClick={() => signOut({ callbackUrl: "/" })} className="btn btn-outline btn-sm">
@@ -106,7 +107,7 @@ export default function Navbar() {
 
                 {/* Mobile Toggle */}
                 <button className="navbar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
-                    {mobileOpen ? "✕" : "☰"}
+                    {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
             </div>
 
@@ -131,7 +132,7 @@ export default function Navbar() {
                             }}
                             onClick={() => setMobileOpen(false)}
                         >
-                            💰 Balance: ৳{new Intl.NumberFormat("en-BD").format(balance)}
+                            <Wallet size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Balance: ৳{new Intl.NumberFormat("en-BD").format(balance)}
                         </Link>
                     )}
                     <Link href="/" className="nav-link" onClick={() => setMobileOpen(false)}>

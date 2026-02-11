@@ -1,15 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
 export default function NoteCard({ note }) {
     const formattedPrice = new Intl.NumberFormat("en-BD").format(note.price);
 
     return (
-        <Link href={`/notes/${note._id}`} className="note-card">            {note.preview && (
+        <Link href={`/notes/${note._id}`} className="note-card">
+            {note.preview ? (
                 <div style={{
+                    position: "relative",
                     width: "100%",
                     height: "180px",
                     overflow: "hidden",
                     borderRadius: "12px 12px 0 0",
+                    backgroundColor: "#f0f0f0",
                 }}>
                     <img 
                         src={note.preview}
@@ -19,12 +23,27 @@ export default function NoteCard({ note }) {
                             height: "100%",
                             objectFit: "cover",
                         }}
+                        onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.parentElement.style.display = "none";
+                        }}
                     />
+                    <div 
+                        className="note-card-badge" 
+                        style={{
+                            position: "absolute",
+                            top: "0.75rem",
+                            right: "0.75rem",
+                        }}
+                    >
+                        {note.subject}
+                    </div>
                 </div>
-            )}            <div className="note-card-header">
-                <div className="note-card-icon">�</div>
-                <div className="note-card-badge">{note.subject}</div>
-            </div>
+            ) : (
+                <div className="note-card-header">
+                    <div className="note-card-badge">{note.subject}</div>
+                </div>
+            )}
 
             <div className="note-card-body">
                 <h3 className="note-card-title">{note.title}</h3>

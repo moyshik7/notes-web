@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader, CreditCard, Smartphone, ArrowLeft, ArrowRight, Check, Clipboard, PartyPopper } from "lucide-react";
 
 const MERCHANT_NUMBER = "01885596054";
 
@@ -22,7 +23,7 @@ export default function AddBalancePage() {
         return (
             <div className="page-container">
                 <div className="empty-state">
-                    <div className="empty-state-icon">⏳</div>
+                    <div className="empty-state-icon"><Loader size={48} /></div>
                     <h3 className="empty-state-title">Loading...</h3>
                 </div>
             </div>
@@ -122,7 +123,7 @@ export default function AddBalancePage() {
     return (
         <div className="page-container">
             <div className="page-header">
-                <h1 className="page-title">💳 Add Balance</h1>
+                <h1 className="page-title"><CreditCard size={24} style={{ display: "inline", verticalAlign: "middle" }} /> Add Balance</h1>
                 <p className="page-subtitle">
                     {step === "amount" && "Enter the amount you want to add"}
                     {step === "method" && "Choose your payment method"}
@@ -214,7 +215,7 @@ export default function AddBalancePage() {
                         )}
 
                         <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
-                            Continue →
+                            Continue <ArrowRight size={16} style={{ display: "inline", verticalAlign: "middle" }} />
                         </button>
                     </form>
                 )}
@@ -259,7 +260,7 @@ export default function AddBalancePage() {
                                     gap: "0.5rem",
                                 }}
                             >
-                                <span style={{ fontSize: "1.5rem" }}>📱</span> bKash
+                                <span style={{ fontSize: "1.5rem" }}><Smartphone size={24} /></span> bKash
                             </button>
                             <button
                                 className="btn"
@@ -276,7 +277,7 @@ export default function AddBalancePage() {
                                     gap: "0.5rem",
                                 }}
                             >
-                                <span style={{ fontSize: "1.5rem" }}>📱</span> Nagad
+                                <span style={{ fontSize: "1.5rem" }}><Smartphone size={24} /></span> Nagad
                             </button>
                         </div>
 
@@ -285,7 +286,7 @@ export default function AddBalancePage() {
                             onClick={handleBack}
                             style={{ width: "100%", marginTop: "1rem" }}
                         >
-                            ← Back
+                            <ArrowLeft size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Back
                         </button>
                     </div>
                 )}
@@ -308,7 +309,7 @@ export default function AddBalancePage() {
                                 color: selectedMethod === "bkash" ? "#E2136E" : "#F6921E",
                                 textTransform: "capitalize",
                             }}>
-                                📱 {selectedMethod} Payment
+                                <Smartphone size={16} style={{ display: "inline", verticalAlign: "middle" }} /> {selectedMethod} Payment
                             </p>
                             <p style={{ fontSize: "0.925rem", lineHeight: 1.6, marginBottom: "1rem" }}>
                                 Send <strong>৳{new Intl.NumberFormat("en-BD").format(parseFloat(amount))}</strong> to the following Merchant Account:
@@ -347,7 +348,7 @@ export default function AddBalancePage() {
                                         whiteSpace: "nowrap",
                                     }}
                                 >
-                                    {copied ? "✓ Copied!" : "📋 Copy"}
+                                    {copied ? <><Check size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Copied!</> : <><Clipboard size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Copy</>}
                                 </button>
                             </div>
 
@@ -414,7 +415,7 @@ export default function AddBalancePage() {
                             style={{ width: "100%", marginTop: "0.75rem" }}
                             disabled={loading}
                         >
-                            ← Back
+                            <ArrowLeft size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Back
                         </button>
                     </form>
                 )}
@@ -422,7 +423,7 @@ export default function AddBalancePage() {
                 {/* Step: Success */}
                 {step === "success" && (
                     <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎉</div>
+                        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}><PartyPopper size={64} /></div>
                         <h2 style={{ fontSize: "1.5rem", marginBottom: "0.75rem", color: "var(--color-success)" }}>
                             Request Submitted!
                         </h2>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Flower2, ArrowLeft, FileText, Lock, Tag, BookOpen, User, Heart, CheckCircle, Download, CreditCard, FileType, Unlock, Coins, Camera } from "lucide-react";
 
 export default function NoteDetailPage({ params }) {
     const resolvedParams = use(params);
@@ -112,7 +113,7 @@ export default function NoteDetailPage({ params }) {
             const data = await res.json();
 
             if (res.ok) {
-                setSuccess("🎉 Purchase successful! Your note is ready to download.");
+                setSuccess("Purchase successful! Your note is ready to download.");
                 setPurchased(true);
                 
                 // Refresh note data to show updated purchase count
@@ -168,7 +169,7 @@ export default function NoteDetailPage({ params }) {
         return (
             <div className="page-container">
                 <div className="empty-state">
-                    <div className="empty-state-icon">🌸</div>
+                    <div className="empty-state-icon"><Flower2 size={48} /></div>
                     <h3 className="empty-state-title">{error}</h3>
                     <Link href="/" className="btn btn-primary mt-2">
                         Back to Marketplace
@@ -222,7 +223,7 @@ export default function NoteDetailPage({ params }) {
                     transition: "all 0.2s ease",
                 }}
             >
-                ← Back to Marketplace
+                <ArrowLeft size={16} /> Back to Marketplace
             </Link>
 
             <div className="note-detail">
@@ -244,45 +245,13 @@ export default function NoteDetailPage({ params }) {
                             />
                         ) : (
                             <div style={{ textAlign: "center", padding: "4rem 0" }}>
-                                <div style={{ fontSize: "4rem", marginBottom: "1rem", animation: "float 3s ease-in-out infinite" }}>📝</div>
+                                <div style={{ fontSize: "4rem", marginBottom: "1rem", animation: "float 3s ease-in-out infinite" }}><FileText size={64} /></div>
                                 <p style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>PDF Preview</p>
                             </div>
                         )}
-                        <div style={{ textAlign: "center" }}>
-                            {(purchased || isOwner) ? (
-                                <p
-                                    style={{
-                                        fontSize: "0.8rem",
-                                        color: "var(--color-success-dark)",
-                                        marginTop: "0.5rem",
-                                        background: "var(--color-success-light)",
-                                        padding: "0.35rem 0.75rem",
-                                        borderRadius: "999px",
-                                        display: "inline-block",
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    ✨ Full PDF Access Available
-                                </p>
-                            ) : (
-                                <p
-                                    style={{
-                                        fontSize: "0.8rem",
-                                        color: "var(--color-text-muted)",
-                                        marginTop: "0.5rem",
-                                        background: "var(--pastel-lavender)",
-                                        padding: "0.35rem 0.75rem",
-                                        borderRadius: "999px",
-                                        display: "inline-block",
-                                    }}
-                                >
-                                    Preview restricted to first 3 pages
-                                </p>
-                            )}
-                        </div>
                         {!purchased && !isOwner && (
                             <div className="note-preview-overlay">
-                                <span className="note-preview-overlay-text">🔒 Purchase to view full content</span>
+                                <span className="note-preview-overlay-text"><Lock size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Purchase to view full content</span>
                             </div>
                         )}
                     </div>
@@ -292,51 +261,27 @@ export default function NoteDetailPage({ params }) {
                         <h1 className="note-detail-title">{note.title}</h1>
 
                         <div className="note-detail-meta">
-                            <span className="note-detail-meta-item">🌼 {(note.topics || []).join(", ")}</span>
-                            <span className="note-detail-meta-item">📖 {note.subject}</span>
-                            <span className="note-detail-meta-item">✨ {note.uploader?.name || "Anonymous"}</span>
-                            {note.purchaseCount > 0 && <span className="note-detail-meta-item">💖 {note.purchaseCount} purchases</span>}
+                            <span className="note-detail-meta-item"><Tag size={14} style={{ display: "inline", verticalAlign: "middle" }} /> {(note.topics || []).join(", ")}</span>
+                            <span className="note-detail-meta-item"><BookOpen size={14} style={{ display: "inline", verticalAlign: "middle" }} /> {note.subject}</span>
+                            <span className="note-detail-meta-item"><User size={14} style={{ display: "inline", verticalAlign: "middle" }} /> {note.uploader?.name || "Anonymous"}</span>
+                            {note.purchaseCount > 0 && <span className="note-detail-meta-item"><Heart size={14} style={{ display: "inline", verticalAlign: "middle" }} /> {note.purchaseCount} purchases</span>}
                         </div>
 
                         <p className="note-detail-description">{note.description}</p>
 
                         {/* Additional Images Gallery */}
                         {note.images && note.images.length > 0 && (
-                            <div style={{ marginTop: "2rem" }}>
-                                <h3 style={{ 
-                                    fontSize: "1.1rem", 
-                                    marginBottom: "1rem",
-                                    color: "var(--color-text-secondary)" 
-                                }}>
-                                    📸 Preview Images
+                            <div className="mt-8">
+                                <h3 className="text-lg mb-4 text-center text-[var(--color-text-secondary)]">
+                                    <Camera size={18} style={{ display: "inline", verticalAlign: "middle" }} /> Preview Images
                                 </h3>
-                                <div style={{ 
-                                    display: "grid", 
-                                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                                    gap: "1rem",
-                                }}>
+                                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                                     {note.images.map((imageUrl, index) => (
                                         <img 
                                             key={index}
                                             src={imageUrl} 
                                             alt={`${note.title} - Image ${index + 1}`}
-                                            style={{
-                                                width: "100%",
-                                                height: "200px",
-                                                objectFit: "cover",
-                                                borderRadius: "12px",
-                                                border: "1px solid var(--color-border)",
-                                                cursor: "pointer",
-                                                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.target.style.transform = "scale(1.05)";
-                                                e.target.style.boxShadow = "var(--shadow-md)";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.target.style.transform = "scale(1)";
-                                                e.target.style.boxShadow = "none";
-                                            }}
+                                            className="w-full h-[200px] object-cover rounded-xl border border-[var(--color-border)] cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-[var(--shadow-md)]"
                                             onClick={() => window.open(imageUrl, "_blank")}
                                         />
                                     ))}
@@ -360,7 +305,7 @@ export default function NoteDetailPage({ params }) {
                                 color: "var(--color-success-dark)",
                                 fontSize: "0.875rem",
                             }}>
-                                ✅ Already Purchased
+                                <CheckCircle size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Already Purchased
                             </div>
                         )}
                         
@@ -372,7 +317,7 @@ export default function NoteDetailPage({ params }) {
 
                         {purchased ? (
                             <button onClick={handleDownload} className="btn btn-primary btn-block btn-lg">
-                                📥 Download Full PDF
+                                <Download size={18} style={{ display: "inline", verticalAlign: "middle" }} /> Download Full PDF
                             </button>
                         ) : isOwner ? (
                             <div className="disclaimer" style={{ textAlign: "center", padding: "0.75rem" }}>
@@ -380,7 +325,7 @@ export default function NoteDetailPage({ params }) {
                             </div>
                         ) : (
                             <button onClick={handleBuy} disabled={buying} className="btn btn-primary btn-block btn-lg">
-                                {buying ? "Processing..." : "💳 Buy Now"}
+                                {buying ? "Processing..." : <><CreditCard size={18} style={{ display: "inline", verticalAlign: "middle" }} /> Buy Now</>}
                             </button>
                         )}
 
@@ -401,7 +346,7 @@ export default function NoteDetailPage({ params }) {
                                     padding: "0.25rem 0",
                                 }}
                             >
-                                <span>📄 Format</span>
+                                <span><FileType size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Format</span>
                                 <span style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>PDF</span>
                             </div>
                             <div
@@ -414,7 +359,7 @@ export default function NoteDetailPage({ params }) {
                                     padding: "0.25rem 0",
                                 }}
                             >
-                                <span>🔓 Access</span>
+                                <span><Unlock size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Access</span>
                                 <span style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>Lifetime</span>
                             </div>
                         </div>
@@ -452,7 +397,7 @@ export default function NoteDetailPage({ params }) {
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>💰</div>
+                        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}><Coins size={64} /></div>
                         <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem", color: "var(--color-text)" }}>
                             Insufficient Balance
                         </h2>
@@ -474,7 +419,7 @@ export default function NoteDetailPage({ params }) {
                                 className="btn btn-primary"
                                 onClick={() => router.push("/add-balance")}
                             >
-                                💳 Add Funds
+                                <CreditCard size={18} style={{ display: "inline", verticalAlign: "middle" }} /> Add Funds
                             </button>
                         </div>
                     </div>

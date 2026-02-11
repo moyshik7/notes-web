@@ -1,6 +1,7 @@
 import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import { Flower2 } from "lucide-react";
 import "./globals.css";
 
 export const metadata = {
@@ -64,7 +65,7 @@ export default function RootLayout({ children }) {
             <div className="footer-content">
               <div className="footer-brand">
                 <h3>
-                  <span>🌸</span> NoteNibo
+                  <Flower2 size={18} style={{ display: "inline", verticalAlign: "middle" }} /> NoteNibo
                 </h3>
                 <p>
                   Bangladesh&apos;s first marketplace for handwritten lecture
@@ -87,7 +88,7 @@ export default function RootLayout({ children }) {
             <div className="footer-bottom">
               <p>
                 © {new Date().getFullYear()} NoteNibo. Made for students, by
-                students. 🇧🇩
+                students.
               </p>
             </div>
           </footer>

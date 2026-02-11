@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCache } from "@/lib/useCache";
+import { Flower2, BookOpen, Sparkles, Star, CreditCard, Wallet, Download, BookOpenCheck, Printer, Upload } from "lucide-react";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -80,7 +81,7 @@ export default function DashboardPage() {
         return (
             <div className="page-container">
                 <div className="empty-state">
-                    <div className="empty-state-icon">🌸</div>
+                    <div className="empty-state-icon"><Flower2 size={48} /></div>
                     <h3 className="empty-state-title">Failed to load dashboard</h3>
                     <p className="empty-state-text">Please try refreshing the page.</p>
                     <button className="btn btn-primary mt-2" onClick={refresh}>
@@ -92,10 +93,10 @@ export default function DashboardPage() {
     }
 
     const tabs = [
-        { id: "purchases", label: "My Purchases", icon: "📖", count: data.purchases?.length || 0 },
-        { id: "earnings", label: "My Earnings", icon: "🌸", count: data.uploadedNotes?.length || 0 },
-        { id: "submissions", label: "My Submissions", icon: "✨", count: data.submissions?.length || 0 },
-        { id: "printing", label: "Printing Service", icon: "🌟" },
+        { id: "purchases", label: "My Purchases", icon: <BookOpen size={16} />, count: data.purchases?.length || 0 },
+        { id: "earnings", label: "My Earnings", icon: <Wallet size={16} />, count: data.uploadedNotes?.length || 0 },
+        { id: "submissions", label: "My Submissions", icon: <Sparkles size={16} />, count: data.submissions?.length || 0 },
+        { id: "printing", label: "Printing Service", icon: <Printer size={16} /> },
     ];
 
     return (
@@ -103,29 +104,29 @@ export default function DashboardPage() {
             <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                     <h1 className="page-title">Dashboard</h1>
-                    <p className="page-subtitle">Welcome back, {data.user?.name} ✨</p>
+                    <p className="page-subtitle">Welcome back, {data.user?.name}</p>
                 </div>
                 <Link href="/add-balance" className="btn btn-primary">
-                    💳 Add Balance
+                    <CreditCard size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Add Balance
                 </Link>
             </div>
 
             {/* Stats Overview */}
             <div className="stats-grid">
                 <div className="stat-card">
-                    <div className="stat-label">🌸 Wallet Balance</div>
+                    <div className="stat-label"><Wallet size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Wallet Balance</div>
                     <div className="stat-value accent">৳{new Intl.NumberFormat("en-BD").format(data.user?.walletBalance || 0)}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">✨ Total Earnings</div>
+                    <div className="stat-label"><Sparkles size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Total Earnings</div>
                     <div className="stat-value">৳{new Intl.NumberFormat("en-BD").format(data.totalEarnings || 0)}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">� Notes Purchased</div>
+                    <div className="stat-label"><BookOpenCheck size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Notes Purchased</div>
                     <div className="stat-value">{data.purchases?.length || 0}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-label">🌟 Notes Uploaded</div>
+                    <div className="stat-label"><Star size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Notes Uploaded</div>
                     <div className="stat-value">{data.uploadedNotes?.length || 0}</div>
                 </div>
             </div>
@@ -179,7 +180,7 @@ export default function DashboardPage() {
                                             <td>৳{note.price}</td>
                                             <td>
                                                 <button className="btn btn-primary btn-sm" onClick={() => handleDownload(note._id)}>
-                                                    ⬇ Download
+                                                    <Download size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Download
                                                 </button>
                                             </td>
                                         </tr>
@@ -189,7 +190,7 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="empty-state">
-                            <div className="empty-state-icon">�</div>
+                            <div className="empty-state-icon"><BookOpen size={48} /></div>
                             <h3 className="empty-state-title">No purchases yet</h3>
                             <p className="empty-state-text">Browse the marketplace to find notes for your courses.</p>
                             <Link href="/" className="btn btn-primary mt-2">
@@ -233,7 +234,7 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="empty-state">
-                            <div className="empty-state-icon">✨</div>
+                            <div className="empty-state-icon"><Sparkles size={48} /></div>
                             <h3 className="empty-state-title">No uploaded notes yet</h3>
                             <p className="empty-state-text">Start earning by uploading your handwritten notes.</p>
                             <Link href="/sell" className="btn btn-primary mt-2">
@@ -279,7 +280,7 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="empty-state">
-                            <div className="empty-state-icon">🌟</div>
+                            <div className="empty-state-icon"><Star size={48} /></div>
                             <h3 className="empty-state-title">No submissions yet</h3>
                             <p className="empty-state-text">Submit your notes for review and track their status here.</p>
                             <Link href="/sell" className="btn btn-primary mt-2">
@@ -292,7 +293,7 @@ export default function DashboardPage() {
 
             {activeTab === "printing" && (
                 <div className="empty-state animate-fade">
-                    <div className="empty-state-icon">🌸</div>
+                    <div className="empty-state-icon"><Printer size={48} /></div>
                     <h3 className="empty-state-title">On-Demand Printing</h3>
                     <p className="empty-state-text">We&apos;re working on a service to print and deliver your purchased notes right to your doorstep. Stay tuned!</p>
                     <div className="badge badge-pending mt-2" style={{ fontSize: "0.85rem", padding: "0.5rem 1rem" }}>

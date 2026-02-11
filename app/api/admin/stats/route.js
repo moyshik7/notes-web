@@ -40,10 +40,28 @@ export async function GET() {
     );
 
     // Get pending notes for review
-    const pendingNotes = await Note.find({ status: "Pending" })
+    const pendingNotesRaw = await Note.find({ status: "Pending" })
       .populate("uploader", "name email")
       .sort({ createdAt: -1 })
       .lean();
+
+    // Serialize pending notes
+    const pendingNotes = pendingNotesRaw.map((note) => ({
+      _id: note._id.toString(),
+      title: note.title,
+      description: note.description,
+      topics: note.topics,
+      subject: note.subject,
+      price: note.price,
+      preview: note.preview || "",
+      images: note.images || [],
+      createdAt: note.createdAt.toISOString(),
+      uploader: note.uploader ? {
+        _id: note.uploader._id.toString(),
+        name: note.uploader.name,
+        email: note.uploader.email,
+      } : null,
+    }));
 
     // Get pending balance requests for review
     const pendingBalanceRequests = await BalanceRequest.find({ status: "Pending" })

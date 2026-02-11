@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles, Flower2, FolderOpen, BookOpen, Coins, Star, CheckCircle, Lightbulb } from "lucide-react";
 
 export default function SellPage() {
   const { data: session, status } = useSession();
@@ -126,13 +127,13 @@ export default function SellPage() {
       <div className="page-header">
         <h1 className="page-title">Sell Your Notes</h1>
         <p className="page-subtitle">
-          Upload your handwritten lecture notes and start earning from your hard work ✨
+          Upload your handwritten lecture notes and start earning from your hard work
         </p>
       </div>
 
       {/* Revenue Disclaimer */}
       <div className="disclaimer" style={{ marginBottom: "2rem" }}>
-        <strong>✨ Revenue Split:</strong> You receive <strong>90%</strong> of
+        <strong><Sparkles size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Revenue Split:</strong> You receive <strong>90%</strong> of
         each sale, and the platform keeps <strong>10%</strong>. Your note will
         be reviewed manually before publishing. Only high-quality, original
         handwritten notes will be approved.
@@ -147,7 +148,7 @@ export default function SellPage() {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label" htmlFor="title">
-                🌸 Note Title
+                <Flower2 size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Note Title
               </label>
               <input
                 id="title"
@@ -164,7 +165,7 @@ export default function SellPage() {
 
             <div className="form-group">
               <label className="form-label" htmlFor="description">
-                ✨ Description
+                <Sparkles size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Description
               </label>
               <textarea
                 id="description"
@@ -182,7 +183,7 @@ export default function SellPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div className="form-group">
                 <label className="form-label" htmlFor="topics">
-                  � Topics
+                  <FolderOpen size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Topics
                 </label>
                 <input
                   id="topics"
@@ -199,7 +200,7 @@ export default function SellPage() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="subject">
-                  � Subject
+                  <BookOpen size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Subject
                 </label>
                 <input
                   id="subject"
@@ -216,7 +217,7 @@ export default function SellPage() {
 
             <div className="form-group">
               <label className="form-label" htmlFor="price">
-                � Price (BDT ৳)
+                <Coins size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Price (BDT ৳)
               </label>
               <input
                 id="price"
@@ -237,7 +238,7 @@ export default function SellPage() {
 
             <div className="form-group">
               <label className="form-label" htmlFor="pdf-file">
-                🌟 Upload PDF
+                <Star size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Upload PDF
               </label>
               <input
                 id="pdf-file"
@@ -259,7 +260,7 @@ export default function SellPage() {
                   />
                 </div>
                 <p className="progress-text">
-                  {progress < 100 ? "Uploading..." : "✅ Upload complete!"}
+                  {progress < 100 ? "Uploading..." : <><CheckCircle size={14} style={{ display: "inline", verticalAlign: "middle" }} /> Upload complete!</>}
                 </p>
               </div>
             )}
@@ -277,7 +278,7 @@ export default function SellPage() {
         {/* Tips Sidebar */}
         <div>
           <div className="sell-tips">
-            <h3>✨ Tips for Best Results</h3>
+            <h3><Lightbulb size={16} style={{ display: "inline", verticalAlign: "middle" }} /> Tips for Best Results</h3>
             <ul>
               <li>Use clear, legible handwriting</li>
               <li>Scan at 300 DPI or higher</li>
@@ -291,7 +292,7 @@ export default function SellPage() {
           </div>
 
           <div className="sell-tips" style={{ marginTop: "1rem" }}>
-            <h3>🌟 What Sells Well</h3>
+            <h3><Star size={16} style={{ display: "inline", verticalAlign: "middle" }} /> What Sells Well</h3>
             <ul>
               <li>Final exam preparation notes</li>
               <li>Solved problem sets</li>

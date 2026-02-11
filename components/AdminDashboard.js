@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, X, CheckCircle, CreditCard, Circle } from "lucide-react";
 
 export default function AdminDashboard({ initialData }) {
     const [data, setData] = useState(initialData);
@@ -208,14 +209,14 @@ export default function AdminDashboard({ initialData }) {
                                                 onClick={() => openReviewModal(note, "Approved")} 
                                                 disabled={actionLoading === note._id}
                                             >
-                                                ✓ Approve
+                                                <Check size={14} /> Approve
                                             </button>
                                             <button
                                                 className="btn btn-danger btn-sm"
                                                 onClick={() => openReviewModal(note, "Rejected")}
                                                 disabled={actionLoading === note._id}
                                             >
-                                                ✕ Reject
+                                                <X size={14} /> Reject
                                             </button>
                                         </div>
                                     </td>
@@ -226,7 +227,7 @@ export default function AdminDashboard({ initialData }) {
                 </div>
             ) : (
                 <div className="empty-state">
-                    <div className="empty-state-icon">✅</div>
+                    <div className="empty-state-icon"><CheckCircle size={48} /></div>
                     <h3 className="empty-state-title">All caught up!</h3>
                     <p className="empty-state-text">No notes pending approval.</p>
                 </div>
@@ -235,7 +236,7 @@ export default function AdminDashboard({ initialData }) {
             {/* Pending Balance Requests */}
             <div className="page-header" style={{ marginTop: "2rem" }}>
                 <h2 className="page-title" style={{ fontSize: "1.5rem" }}>
-                    💳 Pending Balance Requests
+                    <CreditCard size={20} style={{ display: "inline", verticalAlign: "middle" }} /> Pending Balance Requests
                 </h2>
             </div>
 
@@ -282,7 +283,7 @@ export default function AdminDashboard({ initialData }) {
                                                 color: req.method === "bkash" ? "#E2136E" : "#F6921E",
                                             }}
                                         >
-                                            {req.method === "bkash" ? "🔴" : "🟠"} {req.method}
+                                            {req.method === "bkash" ? <Circle size={12} fill="#E2136E" stroke="#E2136E" /> : <Circle size={12} fill="#F6921E" stroke="#F6921E" />} {req.method}
                                         </span>
                                     </td>
                                     <td style={{ fontWeight: 600 }}>
@@ -308,14 +309,14 @@ export default function AdminDashboard({ initialData }) {
                                                 onClick={() => handleBalanceAction(req._id, "Approved")}
                                                 disabled={balanceActionLoading === req._id}
                                             >
-                                                {balanceActionLoading === req._id ? "..." : "✓ Approve"}
+                                                {balanceActionLoading === req._id ? "..." : <><Check size={14} /> Approve</>}
                                             </button>
                                             <button
                                                 className="btn btn-danger btn-sm"
                                                 onClick={() => handleBalanceAction(req._id, "Rejected")}
                                                 disabled={balanceActionLoading === req._id}
                                             >
-                                                {balanceActionLoading === req._id ? "..." : "✕ Reject"}
+                                                {balanceActionLoading === req._id ? "..." : <><X size={14} /> Reject</>}
                                             </button>
                                         </div>
                                     </td>
@@ -326,7 +327,7 @@ export default function AdminDashboard({ initialData }) {
                 </div>
             ) : (
                 <div className="empty-state">
-                    <div className="empty-state-icon">💳</div>
+                    <div className="empty-state-icon"><CreditCard size={48} /></div>
                     <h3 className="empty-state-title">No pending requests</h3>
                     <p className="empty-state-text">All balance requests have been processed.</p>
                 </div>
@@ -364,7 +365,7 @@ export default function AdminDashboard({ initialData }) {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem" }}>
-                            {reviewModal.action === "Approved" ? "✓ Approve Note" : "✕ Reject Note"}
+                            {reviewModal.action === "Approved" ? <><Check size={20} /> Approve Note</> : <><X size={20} /> Reject Note</>}
                         </h2>
                         
                         <div style={{ 
