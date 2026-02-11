@@ -7,18 +7,25 @@ export async function GET(request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const university = searchParams.get("university");
+    const topic = searchParams.get("topic");
     const subject = searchParams.get("subject");
     const q = searchParams.get("q");
+    const distinct = searchParams.get("distinct");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
     const skip = (page - 1) * limit;
 
+    // Return distinct topic values if requested
+    if (distinct === "topics") {
+      const topics = await Note.distinct("topics", { status: "Approved" });
+      return NextResponse.json({ topics: topics.sort() });
+    }
+
     // Build query — only show approved notes
     const query = { status: "Approved" };
 
-    if (university) {
-      query.university = { $regex: university, $options: "i" };
+    if (topic) {
+      query.topics = { $regex: topic, $options: "i" };
     }
 
     if (subject) {

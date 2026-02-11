@@ -20,13 +20,29 @@ export async function POST(request) {
 
     const title = formData.get("title");
     const description = formData.get("description");
-    const university = formData.get("university");
+    const topicsRaw = formData.get("topics");
     const subject = formData.get("subject");
     const price = parseFloat(formData.get("price"));
     const file = formData.get("file");
 
+    // Parse topics array
+    let topics;
+    try {
+      topics = JSON.parse(topicsRaw);
+      if (!Array.isArray(topics) || topics.length === 0) {
+        throw new Error();
+      }
+      topics = topics.map((t) => t.trim()).filter((t) => t.length > 0);
+      if (topics.length === 0) throw new Error();
+    } catch {
+      return NextResponse.json(
+        { error: "At least one topic is required" },
+        { status: 400 }
+      );
+    }
+
     // Validation
-    if (!title || !description || !university || !subject || !price || !file) {
+    if (!title || !description || !topics || !subject || !price || !file) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -82,7 +98,7 @@ export async function POST(request) {
     const note = await Note.create({
       title,
       description,
-      university,
+      topics,
       subject,
       price,
       fileUrl: fileKey,
@@ -102,7 +118,7 @@ export async function POST(request) {
     sendToTelegram({
       title,
       description,
-      university,
+      topics: topics.join(", "),
       subject,
       price,
       uploaderName: uploader.name,

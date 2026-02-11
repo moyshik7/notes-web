@@ -34,6 +34,8 @@ export default function NoteDetailPage({ params }) {
       const data = await res.json();
       if (res.ok) {
         setNote(data.note);
+        // Update page title for SEO
+        document.title = `${data.note.title} — NoteNibo`;
       } else {
         setError(data.error || "Note not found");
       }
@@ -103,8 +105,17 @@ export default function NoteDetailPage({ params }) {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner" />
+      <div className="page-container">
+        <div className="skeleton" style={{ width: 160, height: 16, marginBottom: 24 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "2rem" }}>
+          <div>
+            <div className="skeleton" style={{ width: "100%", height: 400, borderRadius: 16, marginBottom: 16 }} />
+            <div className="skeleton" style={{ width: "60%", height: 28, marginBottom: 12 }} />
+            <div className="skeleton" style={{ width: "100%", height: 16, marginBottom: 8 }} />
+            <div className="skeleton" style={{ width: "80%", height: 16 }} />
+          </div>
+          <div className="skeleton" style={{ width: "100%", height: 280, borderRadius: 16 }} />
+        </div>
       </div>
     );
   }
@@ -129,6 +140,27 @@ export default function NoteDetailPage({ params }) {
 
   return (
     <div className="page-container">
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: note.title,
+            description: note.description,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "BDT",
+              price: note.price,
+              availability: "https://schema.org/InStock",
+            },
+            category: note.subject,
+            keywords: (note.topics || []).join(", "),
+          }),
+        }}
+      />
+
       <Link
         href="/"
         style={{
@@ -176,7 +208,7 @@ export default function NoteDetailPage({ params }) {
 
             <div className="note-detail-meta">
               <span className="note-detail-meta-item">
-                🏫 {note.university}
+                📂 {(note.topics || []).join(", ")}
               </span>
               <span className="note-detail-meta-item">📝 {note.subject}</span>
               <span className="note-detail-meta-item">

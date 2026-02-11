@@ -1,54 +1,78 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import NoteCard from "@/components/NoteCard";
-
-const UNIVERSITIES = [
-  "All Universities",
-  "University of Dhaka",
-  "BUET",
-  "Jahangirnagar University",
-  "Rajshahi University",
-  "CUET",
-  "KUET",
-  "RUET",
-  "NSU",
-  "BRAC University",
-  "IUT",
-];
+import { useCache } from "@/lib/useCache";
 
 export default function HomePage() {
-  const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searching, setSearching] = useState(false);
 
+  // Cache topics list (5 min TTL)
+  const { data: topicsData } = useCache(
+    "home-topics",
+    useCallback(async () => {
+      const res = await fetch("/api/notes?distinct=topics");
+      return res.json();
+    }, []),
+    5 * 60 * 1000
+  );
+
+  // Cache initial notes (2 min TTL)
+  const { data: notesData, loading: notesLoading } = useCache(
+    "home-notes",
+    useCallback(async () => {
+      const res = await fetch("/api/notes?limit=12");
+      return res.json();
+    }, []),
+    2 * 60 * 1000
+  );
+
+  const availableTopics = topicsData?.topics || [];
+  const displayNotes = searchResults !== null ? searchResults : (notesData?.notes || []);
+  const isLoading = searchResults === null && notesLoading;
+
+  // Re-fetch when topic filter changes
   useEffect(() => {
-    fetchNotes();
-  }, [selectedUniversity]);
+    if (!selectedTopic && searchResults === null) return;
+    fetchFilteredNotes();
+  }, [selectedTopic]);
 
-  async function fetchNotes(query = "") {
-    setLoading(true);
+  async function fetchFilteredNotes(query) {
+    setSearching(true);
     try {
       const params = new URLSearchParams();
-      if (query) params.set("q", query);
-      if (selectedUniversity && selectedUniversity !== "All Universities") {
-        params.set("university", selectedUniversity);
-      }
-
+      if (query || searchQuery) params.set("q", query || searchQuery);
+      if (selectedTopic) params.set("topic", selectedTopic);
       const res = await fetch(`/api/notes?${params.toString()}`);
       const data = await res.json();
-      setNotes(data.notes || []);
+      setSearchResults(data.notes || []);
     } catch (error) {
       console.error("Failed to fetch notes:", error);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   }
 
   function handleSearch(e) {
     e.preventDefault();
-    fetchNotes(searchQuery);
+    if (!searchQuery && !selectedTopic) {
+      setSearchResults(null);
+      return;
+    }
+    fetchFilteredNotes(searchQuery);
+  }
+
+  function handleTopicClick(topic) {
+    if (topic === selectedTopic) {
+      setSelectedTopic("");
+      if (!searchQuery) setSearchResults(null);
+    } else {
+      setSelectedTopic(topic);
+    }
   }
 
   return (
@@ -60,14 +84,14 @@ export default function HomePage() {
             Get the <span>Topper&apos;s Notes</span> You Need
           </h1>
           <p className="hero-subtitle">
-            Bangladesh&apos;s first marketplace for handwritten university lecture
-            notes. Buy, sell, and ace your exams.
+            Bangladesh&apos;s first marketplace for handwritten university
+            lecture notes. Buy, sell, and ace your exams.
           </p>
           <form className="hero-search" onSubmit={handleSearch}>
             <input
               type="text"
               className="hero-search-input"
-              placeholder="Search by subject, topic, or university..."
+              placeholder="Search by subject, topic, or keyword..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -78,24 +102,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Trust Stats Bar */}
+      <div className="trust-bar">
+        <div className="trust-stat">
+          <div className="trust-stat-value">500+</div>
+          <div className="trust-stat-label">Notes Shared</div>
+        </div>
+        <div className="trust-stat">
+          <div className="trust-stat-value">200+</div>
+          <div className="trust-stat-label">Active Students</div>
+        </div>
+        <div className="trust-stat">
+          <div className="trust-stat-value">50+</div>
+          <div className="trust-stat-label">Topics Covered</div>
+        </div>
+        <div className="trust-stat">
+          <div className="trust-stat-value">4.8★</div>
+          <div className="trust-stat-label">Avg. Rating</div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="page-container">
-        {/* University Filter */}
+        {/* Topic Filter */}
         <div className="filter-bar">
-          {UNIVERSITIES.map((uni) => (
+          <button
+            className={`filter-chip ${!selectedTopic ? "active" : ""}`}
+            onClick={() => {
+              setSelectedTopic("");
+              if (!searchQuery) setSearchResults(null);
+            }}
+          >
+            All Topics
+          </button>
+          {availableTopics.map((topic) => (
             <button
-              key={uni}
-              className={`filter-chip ${
-                (uni === "All Universities" && !selectedUniversity) ||
-                selectedUniversity === uni
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setSelectedUniversity(uni === "All Universities" ? "" : uni)
-              }
+              key={topic}
+              className={`filter-chip ${selectedTopic === topic ? "active" : ""}`}
+              onClick={() => handleTopicClick(topic)}
             >
-              {uni}
+              {topic}
             </button>
           ))}
         </div>
@@ -103,19 +149,30 @@ export default function HomePage() {
         {/* Notes Grid */}
         <section>
           <div className="page-header">
-            <h2 className="page-title">Featured Notes</h2>
+            <h2 className="page-title">
+              {selectedTopic || searchQuery ? "Search Results" : "Featured Notes"}
+            </h2>
             <p className="page-subtitle">
-              Recently approved, top-quality lecture notes
+              {selectedTopic || searchQuery
+                ? `Showing notes${selectedTopic ? ` in "${selectedTopic}"` : ""}${searchQuery ? ` matching "${searchQuery}"` : ""}`
+                : "Recently approved, top-quality lecture notes"}
             </p>
           </div>
 
-          {loading ? (
-            <div className="loading-spinner">
-              <div className="spinner" />
-            </div>
-          ) : notes.length > 0 ? (
+          {isLoading || searching ? (
             <div className="notes-grid">
-              {notes.map((note) => (
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="skeleton-card">
+                  <div className="skeleton skeleton-avatar" />
+                  <div className="skeleton skeleton-line w-75" />
+                  <div className="skeleton skeleton-line w-100" />
+                  <div className="skeleton skeleton-line w-50" />
+                </div>
+              ))}
+            </div>
+          ) : displayNotes.length > 0 ? (
+            <div className="notes-grid">
+              {displayNotes.map((note) => (
                 <NoteCard key={note._id} note={note} />
               ))}
             </div>
@@ -124,12 +181,61 @@ export default function HomePage() {
               <div className="empty-state-icon">📝</div>
               <h3 className="empty-state-title">No notes found</h3>
               <p className="empty-state-text">
-                {searchQuery || selectedUniversity
+                {searchQuery || selectedTopic
                   ? "Try adjusting your search or filters."
                   : "Be the first to upload your notes and start earning!"}
               </p>
             </div>
           )}
+        </section>
+
+        {/* How It Works */}
+        <section className="how-it-works">
+          <h2 className="page-title text-center">How It Works</h2>
+          <p className="page-subtitle text-center">
+            Three simple steps to get the notes you need
+          </p>
+          <div className="how-it-works-grid">
+            <div className="how-step animate-stagger-1">
+              <div className="how-step-number">1</div>
+              <div className="how-step-icon">🔍</div>
+              <h3 className="how-step-title">Browse & Discover</h3>
+              <p className="how-step-desc">
+                Search by topic, subject, or keyword. Filter through
+                high-quality handwritten notes from top students.
+              </p>
+            </div>
+            <div className="how-step animate-stagger-2">
+              <div className="how-step-number">2</div>
+              <div className="how-step-icon">💳</div>
+              <h3 className="how-step-title">Purchase Securely</h3>
+              <p className="how-step-desc">
+                Pay safely through our platform. Every note is reviewed and
+                approved by our team before listing.
+              </p>
+            </div>
+            <div className="how-step animate-stagger-3">
+              <div className="how-step-number">3</div>
+              <div className="how-step-icon">📥</div>
+              <h3 className="how-step-title">Download & Study</h3>
+              <p className="how-step-desc">
+                Instantly download your notes in high quality. Access them
+                anytime from your dashboard.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="cta-section">
+          <h2>Start Earning From Your Notes</h2>
+          <p>
+            Got amazing lecture notes? Upload them on NoteNibo and earn money
+            every time someone buys them.
+          </p>
+          <Link href="/sell" className="btn btn-primary btn-lg">
+            Start Selling →
+          </Link>
         </section>
       </div>
     </>

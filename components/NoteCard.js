@@ -12,7 +12,13 @@ export default function NoteCard({ note }) {
 
       <div className="note-card-body">
         <h3 className="note-card-title">{note.title}</h3>
-        <p className="note-card-university">🏫 {note.university}</p>
+        <p className="note-card-topics">
+          {(note.topics || []).map((topic, i) => (
+            <span key={i} className="note-card-topic-tag">
+              {topic}
+            </span>
+          ))}
+        </p>
 
         <div className="note-card-footer">
           <div className="note-card-price">৳{formattedPrice}</div>

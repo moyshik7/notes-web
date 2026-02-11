@@ -1,40 +1,36 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useCache } from "@/lib/useCache";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("purchases");
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
-      return;
     }
-    if (status === "authenticated") {
-      fetchDashboard();
-    }
-  }, [status]);
+  }, [status, router]);
 
-  async function fetchDashboard() {
-    try {
+  // Cache dashboard data (1 min TTL)
+  const {
+    data,
+    loading,
+    refresh,
+  } = useCache(
+    "dashboard-data",
+    useCallback(async () => {
       const res = await fetch("/api/user/dashboard");
-      const result = await res.json();
-      if (res.ok) {
-        setData(result);
-      }
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+      if (!res.ok) throw new Error("Failed to load dashboard");
+      return res.json();
+    }, []),
+    60 * 1000
+  );
 
   async function handleDownload(noteId) {
     try {
@@ -50,10 +46,36 @@ export default function DashboardPage() {
     }
   }
 
-  if (status === "loading" || loading) {
+  if (status === "loading") {
     return (
-      <div className="loading-spinner">
-        <div className="spinner" />
+      <div className="page-container">
+        <div className="page-header">
+          <div className="skeleton" style={{ width: 200, height: 32, marginBottom: 8 }} />
+          <div className="skeleton" style={{ width: 300, height: 18 }} />
+        </div>
+        <div className="stats-grid">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton skeleton-stat" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !data) {
+    return (
+      <div className="page-container">
+        <div className="page-header">
+          <div className="skeleton" style={{ width: 200, height: 32, marginBottom: 8 }} />
+          <div className="skeleton" style={{ width: 300, height: 18 }} />
+        </div>
+        <div className="stats-grid">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton skeleton-stat" />
+          ))}
+        </div>
+        <div className="skeleton" style={{ width: "100%", height: 42, marginBottom: 24 }} />
+        <div className="skeleton" style={{ width: "100%", height: 200 }} />
       </div>
     );
   }
@@ -65,15 +87,18 @@ export default function DashboardPage() {
           <div className="empty-state-icon">😕</div>
           <h3 className="empty-state-title">Failed to load dashboard</h3>
           <p className="empty-state-text">Please try refreshing the page.</p>
+          <button className="btn btn-primary mt-2" onClick={refresh}>
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   const tabs = [
-    { id: "purchases", label: "My Purchases", icon: "📖" },
-    { id: "earnings", label: "My Earnings", icon: "💰" },
-    { id: "submissions", label: "My Submissions", icon: "📤" },
+    { id: "purchases", label: "My Purchases", icon: "📖", count: data.purchases?.length || 0 },
+    { id: "earnings", label: "My Earnings", icon: "💰", count: data.uploadedNotes?.length || 0 },
+    { id: "submissions", label: "My Submissions", icon: "📤", count: data.submissions?.length || 0 },
     { id: "printing", label: "Printing Service", icon: "🖨️" },
   ];
 
@@ -81,29 +106,31 @@ export default function DashboardPage() {
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Welcome back, {data.user?.name}</p>
+        <p className="page-subtitle">
+          Welcome back, {data.user?.name} 👋
+        </p>
       </div>
 
       {/* Stats Overview */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Wallet Balance</div>
+          <div className="stat-label">💳 Wallet Balance</div>
           <div className="stat-value accent">
             ৳{new Intl.NumberFormat("en-BD").format(data.user?.walletBalance || 0)}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Total Earnings</div>
+          <div className="stat-label">📈 Total Earnings</div>
           <div className="stat-value">
             ৳{new Intl.NumberFormat("en-BD").format(data.totalEarnings || 0)}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Notes Purchased</div>
+          <div className="stat-label">📚 Notes Purchased</div>
           <div className="stat-value">{data.purchases?.length || 0}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Notes Uploaded</div>
+          <div className="stat-label">📝 Notes Uploaded</div>
           <div className="stat-value">{data.uploadedNotes?.length || 0}</div>
         </div>
       </div>
@@ -117,20 +144,32 @@ export default function DashboardPage() {
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.icon} {tab.label}
+            {tab.count !== undefined && tab.count > 0 && (
+              <span style={{
+                marginLeft: 6,
+                fontSize: "0.7rem",
+                background: activeTab === tab.id ? "var(--color-accent-glow)" : "var(--color-border-light)",
+                padding: "1px 6px",
+                borderRadius: 999,
+                fontWeight: 700,
+              }}>
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
       {activeTab === "purchases" && (
-        <div>
+        <div className="animate-fade">
           {data.purchases?.length > 0 ? (
             <div className="table-container">
               <table className="table">
                 <thead>
                   <tr>
                     <th>Title</th>
-                    <th>University</th>
+                    <th>Topics</th>
                     <th>Subject</th>
                     <th>Price</th>
                     <th>Action</th>
@@ -142,7 +181,7 @@ export default function DashboardPage() {
                       <td>
                         <strong>{note.title}</strong>
                       </td>
-                      <td>{note.university}</td>
+                      <td>{(note.topics || []).join(", ")}</td>
                       <td>{note.subject}</td>
                       <td>৳{note.price}</td>
                       <td>
@@ -174,7 +213,7 @@ export default function DashboardPage() {
       )}
 
       {activeTab === "earnings" && (
-        <div>
+        <div className="animate-fade">
           {data.uploadedNotes?.length > 0 ? (
             <div className="table-container">
               <table className="table">
@@ -229,14 +268,14 @@ export default function DashboardPage() {
       )}
 
       {activeTab === "submissions" && (
-        <div>
+        <div className="animate-fade">
           {data.submissions?.length > 0 ? (
             <div className="table-container">
               <table className="table">
                 <thead>
                   <tr>
                     <th>Title</th>
-                    <th>University</th>
+                    <th>Topics</th>
                     <th>Subject</th>
                     <th>Status</th>
                     <th>Submitted</th>
@@ -249,7 +288,7 @@ export default function DashboardPage() {
                       <td>
                         <strong>{sub.noteId?.title || "—"}</strong>
                       </td>
-                      <td>{sub.noteId?.university || "—"}</td>
+                      <td>{(sub.noteId?.topics || []).join(", ") || "—"}</td>
                       <td>{sub.noteId?.subject || "—"}</td>
                       <td>
                         <span
@@ -283,7 +322,7 @@ export default function DashboardPage() {
       )}
 
       {activeTab === "printing" && (
-        <div className="empty-state">
+        <div className="empty-state animate-fade">
           <div className="empty-state-icon">🖨️</div>
           <h3 className="empty-state-title">On-Demand Printing</h3>
           <p className="empty-state-text">

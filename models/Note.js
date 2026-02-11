@@ -13,10 +13,15 @@ const NoteSchema = new mongoose.Schema(
       required: [true, "Please provide a description"],
       maxlength: [2000, "Description cannot exceed 2000 characters"],
     },
-    university: {
-      type: String,
-      required: [true, "Please specify the university"],
-      trim: true,
+    topics: {
+      type: [String],
+      required: [true, "Please provide at least one topic"],
+      validate: {
+        validator: function (v) {
+          return Array.isArray(v) && v.length > 0 && v.every((t) => t.trim().length > 0);
+        },
+        message: "At least one non-empty topic is required",
+      },
     },
     subject: {
       type: String,
@@ -62,8 +67,8 @@ const NoteSchema = new mongoose.Schema(
 );
 
 // Text index for search
-NoteSchema.index({ title: "text", description: "text", subject: "text" });
-NoteSchema.index({ university: 1, subject: 1 });
+NoteSchema.index({ title: "text", description: "text", subject: "text", topics: "text" });
+NoteSchema.index({ topics: 1, subject: 1 });
 NoteSchema.index({ status: 1 });
 
 export default mongoose.models.Note || mongoose.model("Note", NoteSchema);

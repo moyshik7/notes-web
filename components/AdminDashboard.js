@@ -105,7 +105,7 @@ export default function AdminDashboard({ initialData }) {
             <thead>
               <tr>
                 <th>Title</th>
-                <th>University</th>
+                <th>Topics</th>
                 <th>Subject</th>
                 <th>Price</th>
                 <th>Uploader</th>
@@ -128,7 +128,7 @@ export default function AdminDashboard({ initialData }) {
                       {note.description?.substring(0, 80)}...
                     </span>
                   </td>
-                  <td>{note.university}</td>
+                  <td>{(note.topics || []).join(", ")}</td>
                   <td>{note.subject}</td>
                   <td>৳{note.price}</td>
                   <td>

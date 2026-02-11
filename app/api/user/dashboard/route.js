@@ -20,7 +20,7 @@ export async function GET(request) {
     const user = await User.findById(session.user.id)
       .populate({
         path: "purchasedNotes",
-        select: "title university subject price uploader createdAt",
+        select: "title topics subject price uploader createdAt",
         populate: { path: "uploader", select: "name" },
       })
       .lean();
@@ -31,7 +31,7 @@ export async function GET(request) {
 
     // Get uploaded notes with sales data
     const uploadedNotes = await Note.find({ uploader: session.user.id })
-      .select("title university subject price status purchaseCount createdAt")
+      .select("title topics subject price status purchaseCount createdAt")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -50,7 +50,7 @@ export async function GET(request) {
     const submissions = await Submission.find({
       uploaderId: session.user.id,
     })
-      .populate("noteId", "title university subject price")
+      .populate("noteId", "title topics subject price")
       .sort({ submittedAt: -1 })
       .lean();
 
