@@ -77,8 +77,9 @@ export async function POST(request, { params }) {
     });
 
     // Increment purchase count
-    note.purchaseCount += 1;
-    await note.save();
+    await Note.findByIdAndUpdate(note._id, {
+      $inc: { purchaseCount: 1 },
+    });
 
     return NextResponse.json({
       message: "Purchase successful!",

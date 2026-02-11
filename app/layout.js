@@ -64,7 +64,7 @@ export default function RootLayout({ children }) {
             <div className="footer-content">
               <div className="footer-brand">
                 <h3>
-                  <span>📚</span> NoteNibo
+                  <span>🌸</span> NoteNibo
                 </h3>
                 <p>
                   Bangladesh&apos;s first marketplace for handwritten lecture

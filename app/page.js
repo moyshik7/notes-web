@@ -85,7 +85,7 @@ export default function HomePage() {
           </h1>
           <p className="hero-subtitle">
             Bangladesh&apos;s first marketplace for handwritten university
-            lecture notes. Buy, sell, and ace your exams.
+            lecture notes. Buy, sell, and ace your exams ✨
           </p>
           <form className="hero-search" onSubmit={handleSearch}>
             <input
@@ -110,7 +110,7 @@ export default function HomePage() {
         </div>
         <div className="trust-stat">
           <div className="trust-stat-value">200+</div>
-          <div className="trust-stat-label">Active Students</div>
+          <div className="trust-stat-label">Happy Students</div>
         </div>
         <div className="trust-stat">
           <div className="trust-stat-value">50+</div>
@@ -178,7 +178,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="empty-state">
-              <div className="empty-state-icon">📝</div>
+              <div className="empty-state-icon">✨</div>
               <h3 className="empty-state-title">No notes found</h3>
               <p className="empty-state-text">
                 {searchQuery || selectedTopic
@@ -198,7 +198,7 @@ export default function HomePage() {
           <div className="how-it-works-grid">
             <div className="how-step animate-stagger-1">
               <div className="how-step-number">1</div>
-              <div className="how-step-icon">🔍</div>
+              <div className="how-step-icon">🌟</div>
               <h3 className="how-step-title">Browse & Discover</h3>
               <p className="how-step-desc">
                 Search by topic, subject, or keyword. Filter through
@@ -207,7 +207,7 @@ export default function HomePage() {
             </div>
             <div className="how-step animate-stagger-2">
               <div className="how-step-number">2</div>
-              <div className="how-step-icon">💳</div>
+              <div className="how-step-icon">�</div>
               <h3 className="how-step-title">Purchase Securely</h3>
               <p className="how-step-desc">
                 Pay safely through our platform. Every note is reviewed and
@@ -216,7 +216,7 @@ export default function HomePage() {
             </div>
             <div className="how-step animate-stagger-3">
               <div className="how-step-number">3</div>
-              <div className="how-step-icon">📥</div>
+              <div className="how-step-icon">✨</div>
               <h3 className="how-step-title">Download & Study</h3>
               <p className="how-step-desc">
                 Instantly download your notes in high quality. Access them
@@ -234,7 +234,7 @@ export default function HomePage() {
             every time someone buys them.
           </p>
           <Link href="/sell" className="btn btn-primary btn-lg">
-            Start Selling →
+            Start Selling ✨
           </Link>
         </section>
       </div>
