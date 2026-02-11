@@ -1,24 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { Flower2, Wallet, X, Menu } from "lucide-react";
+import { Wallet, X, Menu } from "lucide-react";
 
 export default function Navbar() {
     const { data: session, status } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [balance, setBalance] = useState(0);
 
-    useEffect(() => {
-        if (status === "authenticated") {
-            fetchBalance();
-        }
-    }, [status]);
-
-    async function fetchBalance() {
+    async function fetchBalance(signal) {
         try {
-            const res = await fetch("/api/user/dashboard");
+            const res = await fetch("/api/user/dashboard", { signal });
             const data = await res.json();
             if (res.ok && data.user) {
                 setBalance(data.user.walletBalance || 0);
@@ -28,13 +23,25 @@ export default function Navbar() {
         }
     }
 
+    useEffect(() => {
+        if (status === "authenticated") {
+            const controller = new AbortController();
+            (async () => {
+                await fetchBalance(controller.signal);
+            })();
+            return () => controller.abort();
+        }
+    }, [status]);
+
     return (
         <nav className="navbar">
             <div className="navbar-container">
                 {/* Logo */}
-                <Link href="/" className="navbar-logo">
-                    <span className="logo-icon"><Flower2 size={20} /></span>
-                    <span className="logo-text">NoteNibo</span>
+                <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-800 hover:text-gray-600 transition-colors">
+                    <span className="flex items-center justify-center mr-10">
+                        <img src="/logo.webp" alt="NoteNibo" width="50" height="50" />
+                    </span>
+                    <span>NoteNibo</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -65,7 +72,7 @@ export default function Navbar() {
                         <div className="nav-skeleton" />
                     ) : status === "authenticated" ? (
                         <div className="nav-user">
-                            <Link 
+                            <Link
                                 href="/add-balance"
                                 style={{
                                     background: "var(--pastel-mint)",
@@ -115,8 +122,8 @@ export default function Navbar() {
             {mobileOpen && (
                 <div className="navbar-mobile-menu">
                     {status === "authenticated" && (
-                        <Link 
-                            href="/add-balance" 
+                        <Link
+                            href="/add-balance"
                             style={{
                                 background: "var(--pastel-mint)",
                                 padding: "0.75rem 1rem",
