@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -17,7 +17,7 @@ export default function NoteDetailPage({ params }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    const fetchNote = async () => {
+    const fetchNote = useCallback(async () => {
         try {
             const res = await fetch(`/api/notes/${id}`);
             const data = await res.json();
@@ -33,11 +33,11 @@ export default function NoteDetailPage({ params }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchNote();
-    }, [id]);
+    }, [fetchNote]);
 
     useEffect(() => {
         // Check if user has purchased this note
