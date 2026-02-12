@@ -26,7 +26,7 @@ export async function PATCH(request, { params }) {
         const body = await request.json();
         const { status, feedback, preview, images } = body;
 
-        console.log("[Admin Note Update] Received:", { id, status, preview, images });
+        //console.log("[Admin Note Update] Received:", { id, status, preview, images });
 
         if (!["Approved", "Rejected"].includes(status)) {
             return NextResponse.json({ error: "Status must be 'Approved' or 'Rejected'" }, { status: 400 });
@@ -37,11 +37,11 @@ export async function PATCH(request, { params }) {
         if (preview !== undefined) updateData.preview = preview;
         if (images !== undefined) updateData.images = images;
 
-        console.log("[Admin Note Update] Update data:", updateData);
+        //console.log("[Admin Note Update] Update data:", updateData);
 
         const note = await Note.findByIdAndUpdate(id, updateData, { new: true });
 
-        console.log("[Admin Note Update] Updated note preview:", note?.preview, "images:", note?.images);
+        //console.log("[Admin Note Update] Updated note preview:", note?.preview, "images:", note?.images);
 
         if (!note) {
             return NextResponse.json({ error: "Note not found" }, { status: 404 });
