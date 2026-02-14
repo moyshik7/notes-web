@@ -25,6 +25,16 @@ A modern marketplace platform for students to buy and sell study notes. Built wi
 - **Icons**: Lucide React
 - **Notifications**: Telegram Bot API
 
+## Screenshots
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/6.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/7.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/4.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/5.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/1.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/2.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/8.png)  
+![](https://raw.githubusercontent.com/moyshik7/notes-web/refs/heads/main/public/demo/3.png)  
+
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
